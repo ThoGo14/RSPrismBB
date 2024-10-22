@@ -1,17 +1,19 @@
 # ----------------------------------------------------------------------------------------------------- #
 # Definiere eine Liste der benötigten Pakete
-pakete <- c("shiny",
-            "shinydashboard",
-            "shinyjqui",
-            "colourpicker",
-            "tidyverse",
-            "DT",
-            "data.table",
-            "openxlsx",
-            "scales",
-            "ggrepel",
-            "ggbeeswarm",
-            "RColorBrewer")
+pakete <- c(
+  "shiny",
+  "shinydashboard",
+  "shinyjqui",
+  "colourpicker",
+  "tidyverse",
+  "DT",
+  "data.table",
+  "openxlsx",
+  "scales",
+  "ggrepel",
+  "ggbeeswarm",
+  "RColorBrewer"
+)
 
 # Überprüfe, ob Pakete installiert sind, und installiere sie, falls nicht
 installiere_fehlende_pakete <- function(pakete) {
@@ -23,7 +25,7 @@ installiere_fehlende_pakete <- function(pakete) {
 }
 
 # Max Dateilimit ist nun 100MB
-options(shiny.maxRequestSize=100*1024^2)
+options(shiny.maxRequestSize = 100 * 1024^2)
 
 # Rufe die Funktion auf
 installiere_fehlende_pakete(pakete)

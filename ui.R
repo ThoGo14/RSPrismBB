@@ -1,15 +1,14 @@
 dashboardPage(
   # ------------------- Header -------------------------------------------------------------------------#
   dashboardHeader(title = "Bar- und Boxplot"),
-  
+
   # ------------------- Sidebar -------------------------------------------------------------------------#
   dashboardSidebar(
     sidebarMenu(
-      
       id = "tabs", # Tab-Panel ID hinzufügen, aktiver tab in input$tabs
       # Tab für Daten eingabe
       menuItem(
-        text = "Data Input", 
+        text = "Data Input",
         expandedName = "dataTabExpand",
         icon = icon("arrow-up-from-bracket"),
         menuItem(
@@ -29,16 +28,17 @@ dashboardPage(
         div(style = "margin-top: -30px"),
         # array daten oder nicht
         checkboxInput(
-          "InpDat", 
+          "InpDat",
           label = "Sind die Daten eines Parameters (zbsp. Gene) pro Reihe angegeben (zbsp. Array data)?",
-          value = FALSE),
-        
+          value = FALSE
+        ),
+
         # Ab wann sind in der Tabelle Nummerische Daten (für konvertierung)
         textInput("colcut", label = "Spaltennummer bevor nummerische Werte kommen:", value = 0),
         # Am anfang direkt ausgeklappt
         startExpanded = TRUE
       ),
-      
+
       # Tab für Boxplot
       menuItem(
         text = "Plots",
@@ -60,14 +60,13 @@ dashboardPage(
         selectInput("groupnameis", label = "Welche Spalte soll als Gruppe verwendet werden?", choices = NULL, selectize = TRUE),
         # Plotvariable
         selectInput("DataY", label = "Was soll auf geplottet werden?", choices = NULL, selectize = TRUE),
-        
         textInput("LabelY", label = "Beschriftung Y-Achse", value = "y-Axis"),
         textInput("LabelX", label = "Beschriftung X_Achse", value = NULL),
         column(6, numericInput("yMin", "Y-Achse Min", value = NA, min = 0)),
         column(6, numericInput("yMax", "Y-Achse Max", value = NA, min = 0)),
         sliderInput("PointSize", label = "Punktgröße", min = 1, max = 10, step = 0.5, value = 2),
         colourInput("Colorpicker", "Colorpicker für Hex-Codes", value = "red"),
-        
+
         # Wähle die Gruppen aus, die im Plot erscheinen sollen
         checkboxGroupInput(
           inputId = "selected_groups",
@@ -76,14 +75,14 @@ dashboardPage(
           # wird dynamisch basierend auf den Daten gesetzt
           selected = NULL # standardmäßig keine Gruppen ausgewählt
         ),
-        
+
         # Slider für die Reihenfolge der Gruppen, text muss um 15px eingerückt werden
         orderInput(
           "group_order",
           label = tags$span(style = "margin-left: 15px", "Ordne die Gruppen:"),
           items = NULL
         ),
-        
+
         # Zwischenüberschrift
         h3("Download Optionen", style = "display: block; margin-left: 15px; margin-right: 5px;"),
         # Dateiname
@@ -100,22 +99,19 @@ dashboardPage(
         ),
         # Downloadbutton, style definiert die position
         downloadButton("downloadPlot", style = "display: block; margin-left: 50px; margin-right: 50px;")
-        
       )
-      
-      
     )
   ),
-  
+
   # ------------------- Body ----------------------------------------------------------------------------#
-  dashboardBody(# tabName in sidebar and body needs to match in name (but not in order)
-    
+  dashboardBody( # tabName in sidebar and body needs to match in name (but not in order)
     tabItems(
       # tab für die Tabelle
       tabItem(
-        tabName = "data", 
+        tabName = "data",
         verbatimTextOutput("TextTableOutput"),
-        DTOutput("data")),
+        DTOutput("data")
+      ),
       # tab für die boxplots
       tabItem(
         tabName = "BoxplotsWithDots",
@@ -130,7 +126,7 @@ dashboardPage(
         DTOutput("SelectionGroupBarplot")
       )
     ),
-  
+
     # CSS-Datei für Style
     tags$head(
       tags$link(rel = "stylesheet", type = "text/css", href = "styles.css")
