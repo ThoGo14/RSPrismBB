@@ -11,9 +11,11 @@ server <- function(input, output, session) {
 
     # Konvertiere sicherheitshalber zu einem DataFrame, falls das noch nicht geschehen ist
     TempDF <- as.data.frame(TempDF)
-
-    colcut <- as.numeric(input$colcut)
-
+    
+    req(input$colcut)
+    colcut <- input$colcut
+  
+    
     # Konvertiere die relevanten Spalten zu numerischen Werten
     if (colcut + 1 == ncol(TempDF)) {
       TempDF[, (colcut + 1):ncol(TempDF)] <-
@@ -43,13 +45,16 @@ server <- function(input, output, session) {
   # Update des selectInput basierend auf den Spaltennamen von DataTable
   observe({
     req(DataTable()) # Warten, bis die Datei geladen ist
-
+    req(input$colcut)
+    
+    colcut <- input$colcut
+    
     # Aktualisiere die Auswahl für dotid
-    updateSelectizeInput(session, "dotid", choices = colnames(DataTable()[c(1:input$colcut)]), server = TRUE)
+    updateSelectizeInput(session, "dotid", choices = colnames(DataTable()[c(1:colcut)]), server = TRUE)
     # Aktualisiere die Auswahl für groupnameis
-    updateSelectizeInput(session, "groupnameis", choices = colnames(DataTable()[c(1:input$colcut)]), server = TRUE)
+    updateSelectizeInput(session, "groupnameis", choices = colnames(DataTable()[c(1:colcut)]), server = TRUE)
     # Aktualisiere die Auswahl für DataY
-    updateSelectizeInput(session, "DataY", choices = colnames(DataTable()[-c(1:input$colcut)]), server = TRUE)
+    updateSelectizeInput(session, "DataY", choices = colnames(DataTable()[-c(1:colcut)]), server = TRUE)
   })
 
 
