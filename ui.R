@@ -34,7 +34,7 @@ dashboardPage(
         ),
 
         # Ab wann sind in der Tabelle Nummerische Daten (für konvertierung)
-        textInput("colcut", label = "Spaltennummer bevor nummerische Werte kommen:", value = 0),
+        numericInput("colcut", label = "Spaltennummer bevor nummerische Werte kommen:", value = 0),
         # Am anfang direkt ausgeklappt
         startExpanded = TRUE
       ),
