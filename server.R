@@ -1,20 +1,20 @@
 server <- function(input, output, session) {
   # ---------------------------------------- Data Input -----------------------------------------------
-
-
+  
+  
   FunctionColcutNA <- function(df) {
     TempDF <- df
-
+    
     TempDF[1, ] <- sapply(TempDF[1, ], \(x) ifelse(is.na(x), "NA", x))
     colnames(TempDF) <- make.unique(as.character(TempDF[1, ])) # Erste Zeile als Spaltennamen
     TempDF <- TempDF[-1, ] # Entferne die erste Zeile aus den Daten
-
+    
     # Konvertiere sicherheitshalber zu einem DataFrame, falls das noch nicht geschehen ist
     TempDF <- as.data.frame(TempDF)
     
     req(input$colcut)
     colcut <- input$colcut
-  
+    
     
     # Konvertiere die relevanten Spalten zu numerischen Werten
     if (colcut + 1 == ncol(TempDF)) {
@@ -26,22 +26,22 @@ server <- function(input, output, session) {
     }
     return(TempDF)
   }
-
+  
   # Verwende eine reaktive Funktion, um die hochgeladene Datei einzulesen
   DataTable <- reactive({
     req(input$DataTable) # Sicherstellen, dass die Datei existiert
     TempDF <- read.xlsx(input$DataTable$datapath, colNames = FALSE) # Datei lesen
-
+    
     if (input$InpDat) {
       # Transponiere und setze die erste Zeile als Spaltennamen
       TempDF <- t(TempDF)
     }
-
+    
     TempDF <- FunctionColcutNA(TempDF)
-
+    
     return(TempDF)
   })
-
+  
   # Update des selectInput basierend auf den Spaltennamen von DataTable
   observe({
     req(DataTable()) # Warten, bis die Datei geladen ist
@@ -56,25 +56,25 @@ server <- function(input, output, session) {
     # Aktualisiere die Auswahl für DataY
     updateSelectizeInput(session, "DataY", choices = colnames(DataTable()[-c(1:colcut)]), server = TRUE)
   })
-
-
-
+  
+  
+  
   # Render die Tabelle nur, wenn DataTable verfügbar ist
   output$data <- renderDT({
     req(DataTable()) # Warten, bis die Datei geladen ist
     ## round numeric data
     TempDF <- data.table(DataTable()[1:10, 1:10]) %>%
       mutate_if(is.numeric, ~ round(., 4))
-
+    
     datatable(TempDF, options = list(server = TRUE, pageLength = 25, scrollX = TRUE, dom = "t"))
   })
-
-
-
+  
+  
+  
   # ---------------------------------------- Update Input -----------------------------------------------
   observe({
     req(DataTable())
-
+    
     # Aktualisiere die Auswahl für selected_groups
     updateCheckboxGroupInput(
       session,
@@ -83,47 +83,47 @@ server <- function(input, output, session) {
       selected = unique(DataTable()[[input$groupnameis]])
     )
   })
-
+  
   observeEvent(input$selected_groups, {
     req(DataTable())
     # Filtere die Gruppen basierend auf den ausgewählten Gruppen
     selected_items <- unique(DataTable()[[input$groupnameis]])[unique(DataTable()[[input$groupnameis]]) %in% input$selected_groups]
-
+    
     # Aktualisiere die Reihenfolge für group_order basierend auf den ausgewählten Gruppen
     updateOrderInput(session,
-      inputId = "group_order",
-      items = selected_items,
-      item_class = "info"
+                     inputId = "group_order",
+                     items = selected_items,
+                     item_class = "info"
     )
   })
-
-
+  
+  
   # ---------------------------------------- Table for color Boxplot --------------------------------------------
   # Erstelle eine reaktive Tabelle für die Gruppen
   SelectionGroupBoxplot <- reactiveVal()
-
+  
   # Beobachte Änderungen an der Tabelle
   observe({
     req(input$SelectionGroupBoxplot_cell_edit) # Sicherstellen, dass die Tabelle bearbeitet wurde
     # select new and old input
     new_data <- input$SelectionGroupBoxplot_cell_edit
     old_data <- SelectionGroupBoxplot()
-
+    
     # Ändere die Farbe in der Tabelle
     old_data[new_data$row, "Color"] <- new_data$value
     SelectionGroupBoxplot(old_data)
   })
-
+  
   # Render die Tabelle
   output$SelectionGroupBoxplot <- renderDT(
     {
       req(DataTable())
-
+      
       # Wie viele Farben benötigt
       colourcount <- length(unique(DataTable()[[input$dotid]]))
       # Tabelle für default farben
       TempDF <- data.frame(
-        "GroupID" = unique(DataTable()[[input$dotid]]),
+        "GroupID" = sort(unique(DataTable()[[input$dotid]])),
         "Color" = getPalette(colourcount)
       )
       SelectionGroupBoxplot(TempDF) # Setze die reaktive Tabelle
@@ -135,30 +135,30 @@ server <- function(input, output, session) {
     rownames = FALSE,
     selection = "none",
     # zeige nur die Tabelle an
-    options = list(dom = "t")
+    options = list(dom = "t", pageLength = -1)
   )
-
+  
   # ---------------------------------------- Table for color Barplot --------------------------------------------
   # Erstelle eine reaktive Tabelle für die Gruppen
   SelectionGroupBarplot <- reactiveVal()
-
+  
   # Beobachte Änderungen an der Tabelle
   observe({
     req(input$SelectionGroupBarplot_cell_edit) # Sicherstellen, dass die Tabelle bearbeitet wurde
     # select new and old input
     new_data <- input$SelectionGroupBarplot_cell_edit
     old_data <- SelectionGroupBarplot()
-
+    
     # Ändere die Farbe in der Tabelle
     old_data[new_data$row, "Color"] <- new_data$value
     SelectionGroupBarplot(old_data)
   })
-
+  
   # Render die Tabelle
   output$SelectionGroupBarplot <- renderDT(
     {
       req(DataTable())
-
+      
       # Wie viele Farben benötigt
       colourcount <- length(unique(DataTable()[[input$dotid]]))
       # Tabelle für default farben
@@ -177,7 +177,7 @@ server <- function(input, output, session) {
     # zeige nur die Tabelle an
     options = list(dom = "t")
   )
-
+  
   # ---------------------------------------- BoxplotsWithDots-----------------------------------------------
   # Render den Plot
   output$BoxplotsWithDots <- renderPlot({
@@ -185,7 +185,7 @@ server <- function(input, output, session) {
     p <- BoxplotInput()
     plot(p)
   })
-
+  
   # plot erstellen
   BoxplotInput <- reactive({
     req(
@@ -193,26 +193,27 @@ server <- function(input, output, session) {
       input$group_order,
       SelectionGroupBoxplot()
     ) # Sicherstellen, dass die Tabelle vorhanden ist
-
+    
     # daten Filtern, welche im Sidepanel gewählt werden
     filtered_data <- DataTable() %>%
       filter(.data[[input$groupnameis]] %in% input$selected_groups)
-
+    
     # sortiere die Daten wie im Sidepanel + Faktorisiere
     ordered_data <- filtered_data %>%
       mutate(!!input$groupnameis := factor(.data[[input$groupnameis]], levels = input$group_order))
-
+    
     # Setze y_min and y_max mit defaults
     y_min <- ifelse(is.numeric(input$yMin) & !is.na(input$yMin), input$yMin, NA)
     y_max <- ifelse(is.numeric(input$yMax) & !is.na(input$yMax), input$yMax, NA)
-
+    
     # Schauen ob y_min auch kleiner ist ist y_max, ansonsten tauschen
     if (!is.na(y_min) & !is.na(y_max) & y_min > y_max) {
       temp <- y_min
       y_min <- y_max
       y_max <- temp
     }
-
+    
+    
     # erste plot mit ggplot
     p <- ordered_data %>%
       ggplot(aes(x = .data[[input$groupnameis]], y = .data[[input$DataY]])) +
@@ -233,7 +234,7 @@ server <- function(input, output, session) {
       ) +
       scale_colour_manual(
         name = input$dotid,
-        values = setNames(SelectionGroupBoxplot()[["Color"]], SelectionGroupBoxplot()[["GroupID"]])
+        values = setNames(SelectionGroupBoxplot()[["Color"]], SelectionGroupBoxplot()[["GroupID"]]) 
       ) +
       {
         if (is.numeric(y_min) | is.numeric(y_max)) {
@@ -257,7 +258,7 @@ server <- function(input, output, session) {
     p <- BarplotInput()
     plot(p)
   })
-
+  
   # plot erstellen
   BarplotInput <- reactive({
     req(
@@ -265,15 +266,15 @@ server <- function(input, output, session) {
       input$group_order,
       SelectionGroupBarplot()
     ) # Sicherstellen, dass die Tabelle vorhanden ist
-
+    
     # daten Filtern, welche im Sidepanel gewählt werden
     filtered_data <- DataTable() %>%
       filter(.data[[input$groupnameis]] %in% input$selected_groups)
-
+    
     # sortiere die Daten wie im Sidepanel + Faktorisiere
     ordered_data <- filtered_data %>%
       mutate(!!input$groupnameis := factor(.data[[input$groupnameis]], levels = input$group_order))
-
+    
     Statistics <- ordered_data %>%
       group_by(.data[[input$groupnameis]]) %>%
       summarise(
@@ -286,18 +287,18 @@ server <- function(input, output, session) {
       ) %>%
       as.data.frame() %>%
       mutate(!!input$groupnameis := factor(.data[[input$groupnameis]], levels = input$group_order))
-
+    
     # Setze y_min and y_max mit defaults
     y_min <- ifelse(is.numeric(input$yMin) & !is.na(input$yMin), input$yMin, NA)
     y_max <- ifelse(is.numeric(input$yMax) & !is.na(input$yMax), input$yMax, NA)
-
+    
     # Schauen ob y_min auch kleiner ist ist y_max, ansonsten tauschen
     if (!is.na(y_min) & !is.na(y_max) & y_min > y_max) {
       temp <- y_min
       y_min <- y_max
       y_max <- temp
     }
-
+    
     # erste plot mit ggplot
     p <- Statistics %>%
       ggplot() +
@@ -355,7 +356,7 @@ server <- function(input, output, session) {
       )
     return(p)
   })
-
+  
   # ---------------------------------------- Erklärung -----------------------------------------------------
   TextColorTable <-
     paste0(
@@ -367,25 +368,25 @@ server <- function(input, output, session) {
       "oder als HEX-Code eintragen --> mit 'STRG + ENTER' bestätigen.\n",
       "Wenn der Fehler '[object Object]' angezeigt wird, ist vermutlich die Farbe falsch definiert."
     )
-
+  
   # Text als erklärung
   output$TextColorTableBoxplot <- renderText({
     req(DataTable())
     TextColorTable
   })
-
+  
   # Text als erklärung
   output$TextColorTableBarplot <- renderText({
     req(DataTable())
     TextColorTable
   })
-
+  
   TextTableOutput <-
     paste0(
       "VORSCHAU:\n",
       "Die ersten 10 Zeilen und 10 Spalten der Input-Tabelle werden angezeigt."
     )
-
+  
   output$TextTableOutput <- renderText({
     req(DataTable())
     TextTableOutput
@@ -409,7 +410,7 @@ server <- function(input, output, session) {
       } else if (input$tabs == "BarplotsWithDots") {
         BarplotInput() # Für Barplots
       }
-
+      
       if (input$ImageFiletype == "png") {
         # Speichern als PNG
         ggsave(
@@ -435,7 +436,7 @@ server <- function(input, output, session) {
       }
     }
   )
-
+  
   # ensure that it will stop the websocket server started by shiny::runApp() and the underlying R process when the
   # browser window is closed
   session$onSessionEnded(function() {
