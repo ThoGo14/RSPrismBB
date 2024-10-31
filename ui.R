@@ -29,7 +29,7 @@ dashboardPage(
         # array daten oder nicht
         checkboxInput(
           "InpDat",
-          label = "Sind die Daten eines Parameters (zbsp. Gene) pro Reihe angegeben (zbsp. Array data)?",
+          label = "Sind die Daten eines Parameters (zbsp. Gene) pro Reihe bzw. Zeile angegeben (zbsp. Array data)?",
           value = FALSE
         ),
 
