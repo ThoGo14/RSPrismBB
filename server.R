@@ -29,7 +29,8 @@ server <- function(input, output, session) {
   
   # Verwende eine reaktive Funktion, um die hochgeladene Datei einzulesen
   DataTable <- reactive({
-    req(input$DataTable) # Sicherstellen, dass die Datei existiert
+    req(input$DataTable,
+        input$colcut) # Sicherstellen, dass die Datei existiert
     TempDF <- read.xlsx(input$DataTable$datapath, colNames = FALSE) # Datei lesen
     
     if (input$InpDat) {
