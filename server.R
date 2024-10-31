@@ -62,8 +62,12 @@ server <- function(input, output, session) {
   # Render die Tabelle nur, wenn DataTable verfügbar ist
   output$data <- renderDT({
     req(DataTable()) # Warten, bis die Datei geladen ist
+    
+    max_row <- ifelse(nrow(DataTable()) > 10, 10, nrow(DataTable()))
+    max_col <- ifelse(ncol(DataTable()) > 10, 10, ncol(DataTable()))
+    
     ## round numeric data
-    TempDF <- data.table(DataTable()[1:10, 1:10]) %>%
+    TempDF <- data.table(DataTable()[1:max_row, 1:max_col]) %>%
       mutate_if(is.numeric, ~ round(., 4))
     
     datatable(TempDF, options = list(server = TRUE, pageLength = 25, scrollX = TRUE, dom = "t"))
