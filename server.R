@@ -13,13 +13,15 @@ server <- function(input, output, session) {
     TempDF <- as.data.frame(TempDF)
     
     req(input$colcut)
-    colcut <- input$colcut
+    colcut <- input$colcut %>% abs()
     
     
     # Konvertiere die relevanten Spalten zu numerischen Werten
     if (colcut + 1 == ncol(TempDF)) {
       TempDF[, (colcut + 1):ncol(TempDF)] <-
         lapply(TempDF[, (colcut + 1):ncol(TempDF)], as.numeric) %>% unlist()
+    } else if (colcut >= ncol(TempDF)){
+      TempDF <- TempDF
     } else {
       TempDF[, (colcut + 1):ncol(TempDF)] <-
         lapply(TempDF[, (colcut + 1):ncol(TempDF)], as.numeric)
@@ -48,7 +50,10 @@ server <- function(input, output, session) {
     req(DataTable()) # Warten, bis die Datei geladen ist
     req(input$colcut)
     
-    colcut <- input$colcut
+    colcut <- input$colcut %>% abs()
+    if (colcut > ncol(DataTable())) {
+      colcut <- ncol(DataTable())
+    }
     
     # Aktualisiere die Auswahl für dotid
     updateSelectizeInput(session, "dotid", choices = colnames(DataTable()[c(1:colcut)]), server = TRUE)
