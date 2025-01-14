@@ -44,3 +44,5 @@ getPalette <- colorRampPalette(brewer.pal(9, "Set1"))
 sd_n <- function(Vector) {
   sd(Vector, na.rm = T) * sqrt((length(na.exclude(Vector)) - 1) / length(na.exclude(Vector)))
 }
+
+print(sessionInfo())
