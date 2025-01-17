@@ -62,6 +62,7 @@ dashboardPage(
         selectInput("DataY", label = "Was soll auf geplottet werden?", choices = NULL, selectize = TRUE),
         textInput("LabelY", label = "Beschriftung Y-Achse", value = "y-Axis"),
         textInput("LabelX", label = "Beschriftung X_Achse", value = NULL),
+        checkboxInput("TitelKursiv", label = "Titel kursiv", value = FALSE),
         column(6, numericInput("yMin", "Y-Achse Min", value = NA, min = 0)),
         column(6, numericInput("yMax", "Y-Achse Max", value = NA, min = 0)),
         sliderInput("PointSize", label = "Punktgröße", min = 1, max = 10, step = 0.5, value = 2),
@@ -76,29 +77,38 @@ dashboardPage(
           selected = NULL # standardmäßig keine Gruppen ausgewählt
         ),
 
-        # Slider für die Reihenfolge der Gruppen, text muss um 15px eingerückt werden
-        orderInput(
-          "group_order",
-          label = tags$span(style = "margin-left: 15px", "Ordne die Gruppen:"),
-          items = NULL
+        # Slider für die Reihenfolge der Gruppen, Text und Elemente müssen um 15px eingerückt werden
+        div(
+          style = "margin-left: 15px",
+          tags$h5("Ordne die Gruppen:", style = "margin-bottom: 5px; margin-top: 15px; font-weight: bold"),
+          orderInput(
+            "group_order",
+            label = NULL, # Das Label wird hier leer gelassen, da der Titel schon oben steht
+            items = NULL,
+            class = "btn-group-vertical",
+            width = "auto"
+          )
         ),
+       
 
         # Zwischenüberschrift
-        h3("Download Optionen", style = "display: block; margin-left: 15px; margin-right: 5px;"),
-        # Dateiname
-        textInput("Filename", label = "Bild Dateiname ", placeholder = "Dateiname"),
-        # Bildbreite-, höhe und -auflösung
-        numericInput("ImageWidth", label = "Bildbreite", value = 20),
-        numericInput("ImageHeight", label = "Bildhöhe", value = 20),
-        numericInput("ImageDPI", label = "Bildauflösung (dots per inch)", value = 200),
-        # Bild speichern als png oder PDF
-        radioButtons(
-          "ImageFiletype",
-          label = "Bildformat auswählen",
-          choices = c("png (in cm)" = "png", "pdf (in cm)" = "pdf")
-        ),
-        # Downloadbutton, style definiert die position
-        downloadButton("downloadPlot", style = "display: block; margin-left: 50px; margin-right: 50px;")
+        div(
+          h3("Download Optionen", style = "display: block; margin-left: 15px; margin-right: 5px;"),
+          # Dateiname
+          textInput("Filename", label = "Bild Dateiname ", placeholder = "Dateiname"),
+          # Bildbreite-, höhe und -auflösung
+          numericInput("ImageWidth", label = "Bildbreite", value = 20),
+          numericInput("ImageHeight", label = "Bildhöhe", value = 20),
+          numericInput("ImageDPI", label = "Bildauflösung (dots per inch)", value = 200),
+          # Bild speichern als png oder PDF
+          radioButtons(
+            "ImageFiletype",
+            label = "Bildformat auswählen",
+            choices = c("png (in cm)" = "png", "pdf (in cm)" = "pdf")
+          ),
+          # Downloadbutton, style definiert die position
+          downloadButton("downloadPlot", style = "display: block; margin-left: 50px; margin-right: 50px;")
+          )
       )
     )
   ),

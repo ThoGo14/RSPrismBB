@@ -105,6 +105,7 @@ server <- function(input, output, session) {
                      items = selected_items,
                      item_class = "info"
     )
+    
   })
   
   
@@ -223,7 +224,7 @@ server <- function(input, output, session) {
       y_max <- temp
     }
     
-    
+   
     # erste plot mit ggplot
     p <- ordered_data %>%
       ggplot(aes(x = .data[[input$groupnameis]], y = .data[[input$DataY]])) +
@@ -257,7 +258,7 @@ server <- function(input, output, session) {
         axis.text.x = element_text(angle = 45, hjust = 1),
         legend.text = element_text(size = 16),
         legend.title = element_text(size = 16),
-        plot.title = element_text(size = 16, hjust = 0.5)
+        plot.title = element_text(size = 16, hjust = 0.5, face = ifelse(input$TitelKursiv, "italic", "plain"))
       )
     return(p)
   })
@@ -362,7 +363,7 @@ server <- function(input, output, session) {
         axis.text.x = element_text(angle = 45, hjust = 1),
         legend.text = element_text(size = 16),
         legend.title = element_text(size = 16),
-        plot.title = element_text(size = 16, hjust = 0.5)
+        plot.title = element_text(size = 16, hjust = 0.5, face = ifelse(input$TitelKursiv, "italic", "plain"))
       )
     return(p)
   })
