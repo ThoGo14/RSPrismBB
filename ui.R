@@ -59,9 +59,9 @@ dashboardPage(
         # Spaltenname für Gruppierung
         selectInput("groupnameis", label = "Welche Spalte soll als Gruppe verwendet werden?", choices = NULL, selectize = TRUE),
         # Plotvariable
-        selectInput("DataY", label = "Was soll auf geplottet werden?", choices = NULL, selectize = TRUE),
+        selectInput("DataY", label = "Was soll auf der Y-Achse geplottet werden?", choices = NULL, selectize = TRUE),
         textInput("LabelY", label = "Beschriftung Y-Achse", value = "y-Axis"),
-        textInput("LabelX", label = "Beschriftung X_Achse", value = NULL),
+        textInput("LabelX", label = "Beschriftung X-Achse", value = NULL),
         checkboxInput("TitelKursiv", label = "Titel kursiv", value = FALSE),
         column(6, numericInput("yMin", "Y-Achse Min", value = NA, min = 0)),
         column(6, numericInput("yMax", "Y-Achse Max", value = NA, min = 0)),
