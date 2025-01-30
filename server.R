@@ -1,26 +1,26 @@
 server <- function(input, output, session) {
   # ---------------------------------------- Data Input -----------------------------------------------
-  
-  
+
+
   FunctionColcutNA <- function(df) {
     TempDF <- df
-    
+
     TempDF[1, ] <- sapply(TempDF[1, ], \(x) ifelse(is.na(x), "NA", x))
     colnames(TempDF) <- make.unique(as.character(TempDF[1, ])) # Erste Zeile als Spaltennamen
     TempDF <- TempDF[-1, ] # Entferne die erste Zeile aus den Daten
-    
+
     # Konvertiere sicherheitshalber zu einem DataFrame, falls das noch nicht geschehen ist
     TempDF <- as.data.frame(TempDF)
-    
+
     req(input$colcut)
     colcut <- input$colcut %>% abs()
-    
-    
+
+
     # Konvertiere die relevanten Spalten zu numerischen Werten
     if (colcut + 1 == ncol(TempDF)) {
       TempDF[, (colcut + 1):ncol(TempDF)] <-
         lapply(TempDF[, (colcut + 1):ncol(TempDF)], as.numeric) %>% unlist()
-    } else if (colcut >= ncol(TempDF)){
+    } else if (colcut >= ncol(TempDF)) {
       TempDF <- TempDF
     } else {
       TempDF[, (colcut + 1):ncol(TempDF)] <-
@@ -28,63 +28,68 @@ server <- function(input, output, session) {
     }
     return(TempDF)
   }
-  
+
   # Verwende eine reaktive Funktion, um die hochgeladene Datei einzulesen
   DataTable <- reactive({
-    req(input$DataTable,
-        input$colcut) # Sicherstellen, dass die Datei existiert
+    req(
+      input$DataTable,
+      input$colcut
+    ) # Sicherstellen, dass die Datei existiert
     TempDF <- read.xlsx(input$DataTable$datapath, colNames = FALSE) # Datei lesen
-    
+
     if (input$InpDat) {
       # Transponiere und setze die erste Zeile als Spaltennamen
       TempDF <- t(TempDF)
     }
-    
+
     TempDF <- FunctionColcutNA(TempDF)
-    
+
     return(TempDF)
   })
-  
+
   # Update des selectInput basierend auf den Spaltennamen von DataTable
   observe({
     req(DataTable()) # Warten, bis die Datei geladen ist
     req(input$colcut)
-    
+
     colcut <- input$colcut %>% abs()
     if (colcut > ncol(DataTable())) {
       colcut <- ncol(DataTable())
     }
-    
+
+    All_colname <- colnames(DataTable())
+    Colname_before_colcut <- All_colname[1:colcut]
+    Colname_after_colcut <- All_colname[(colcut + 1):length(All_colname)]
+
     # Aktualisiere die Auswahl für dotid
-    updateSelectizeInput(session, "dotid", choices = colnames(DataTable()[c(1:colcut)]), server = TRUE)
-    # Aktualisiere die Auswahl für groupnameis
-    updateSelectizeInput(session, "groupnameis", choices = colnames(DataTable()[c(1:colcut)]), server = TRUE)
+    updateSelectizeInput(session, "dotid", choices = Colname_before_colcut, server = TRUE)
+    # Aktualisiere die Auswahl für DataX
+    updateSelectizeInput(session, "groupnameis", choices = Colname_before_colcut, server = TRUE)
     # Aktualisiere die Auswahl für DataY
-    updateSelectizeInput(session, "DataY", choices = colnames(DataTable()[-c(1:colcut)]), server = TRUE)
+    updateSelectizeInput(session, "DataY", choices = Colname_after_colcut, server = TRUE)
   })
-  
-  
-  
+
+
   # Render die Tabelle nur, wenn DataTable verfügbar ist
   output$data <- renderDT({
     req(DataTable()) # Warten, bis die Datei geladen ist
-    
+
     max_row <- ifelse(nrow(DataTable()) > 10, 10, nrow(DataTable()))
     max_col <- ifelse(ncol(DataTable()) > 10, 10, ncol(DataTable()))
-    
+
     ## round numeric data
     TempDF <- data.table(DataTable()[1:max_row, 1:max_col]) %>%
       mutate_if(is.numeric, ~ round(., 4))
-    
+
     datatable(TempDF, options = list(server = TRUE, pageLength = 25, scrollX = TRUE, dom = "t"))
   })
-  
-  
-  
+
+
+
   # ---------------------------------------- Update Input -----------------------------------------------
   observe({
     req(DataTable())
-    
+
     # Aktualisiere die Auswahl für selected_groups
     updateCheckboxGroupInput(
       session,
@@ -93,22 +98,21 @@ server <- function(input, output, session) {
       selected = unique(DataTable()[[input$groupnameis]])
     )
   })
-  
+
   observeEvent(input$selected_groups, {
     req(DataTable())
     # Filtere die Gruppen basierend auf den ausgewählten Gruppen
     selected_items <- unique(DataTable()[[input$groupnameis]])[unique(DataTable()[[input$groupnameis]]) %in% input$selected_groups]
-    
+
     # Aktualisiere die Reihenfolge für group_order basierend auf den ausgewählten Gruppen
     updateOrderInput(session,
-                     inputId = "group_order",
-                     items = selected_items,
-                     item_class = "info"
+      inputId = "group_order",
+      items = selected_items,
+      item_class = "info"
     )
-    
   })
-  
-  
+
+
   # ---------------------------------------- Table for color Boxplot --------------------------------------------
   # Erstelle eine reaktive Tabelle für die Gruppen
   SelectionGroupBoxplot <- reactiveVal()
@@ -224,7 +228,7 @@ server <- function(input, output, session) {
       y_max <- temp
     }
     
-   
+    
     # erste plot mit ggplot
     p <- ordered_data %>%
       ggplot(aes(x = .data[[input$groupnameis]], y = .data[[input$DataY]])) +
@@ -368,7 +372,7 @@ server <- function(input, output, session) {
     return(p)
   })
   
-  # ---------------------------------------- Erklärung -----------------------------------------------------
+  # ---------------------------------------- Erklärung und Text -----------------------------------------------------
   TextColorTable <-
     paste0(
       "INFO\n",
@@ -379,28 +383,32 @@ server <- function(input, output, session) {
       "oder als HEX-Code eintragen --> mit 'STRG + ENTER' bestätigen.\n",
       "Wenn der Fehler '[object Object]' angezeigt wird, ist vermutlich die Farbe falsch definiert."
     )
-  
+
   # Text als erklärung
   output$TextColorTableBoxplot <- renderText({
     req(DataTable())
     TextColorTable
   })
-  
+
   # Text als erklärung
   output$TextColorTableBarplot <- renderText({
     req(DataTable())
     TextColorTable
   })
-  
+
   TextTableOutput <-
     paste0(
       "VORSCHAU:\n",
       "Die ersten 10 Zeilen und 10 Spalten der Input-Tabelle werden angezeigt."
     )
-  
+
   output$TextTableOutput <- renderText({
     req(DataTable())
     TextTableOutput
+  })
+
+  output$sessionInfo <- renderPrint({
+    sessionInfo() # Gibt die Session-Info direkt als Ausgabe zurück
   })
   # ---------------------------------------- Download -----------------------------------------------------
   # Für Download Button
@@ -421,7 +429,7 @@ server <- function(input, output, session) {
       } else if (input$tabs == "BarplotsWithDots") {
         BarplotInput() # Für Barplots
       }
-      
+
       if (input$ImageFiletype == "png") {
         # Speichern als PNG
         ggsave(
@@ -447,6 +455,32 @@ server <- function(input, output, session) {
       }
     }
   )
+
+  # ---------------------------------------- Changelog -----------------------------------------------------
+  
+  observeEvent(input$show_changelog, {
+    changelog_path <- "changelog.txt"
+    
+    if (!file.exists(changelog_path)) {
+      changelog_html <- "<b>Kein Changelog gefunden.</b>"
+    } else {
+      changelog_content <- readLines(changelog_path, warn = FALSE)
+      
+      if (length(changelog_content) == 0) {
+        changelog_html <- "<b>Changelog ist leer.</b>"
+      } else {
+        changelog_html <- paste(changelog_content, collapse = "<br>")
+      }
+    }
+    
+    showModal(modalDialog(
+      title = strong("Updateverlauf"),  # Titel direkt fett machen,
+      HTML(changelog_html),
+      easyClose = TRUE,
+      footer = modalButton("Schließen")
+    ))
+  })
+  
   
   # ensure that it will stop the websocket server started by shiny::runApp() and the underlying R process when the
   # browser window is closed

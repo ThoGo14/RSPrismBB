@@ -1,6 +1,11 @@
 dashboardPage(
   # ------------------- Header -------------------------------------------------------------------------#
-  dashboardHeader(title = "Bar- und Boxplot"),
+  dashboardHeader(title = "Bar- und Boxplot",
+                  tags$li(
+                    class = "dropdown",
+                    style = "padding: 15px; color: white;",
+                    aktuelle_version  # Zeigt die neueste Version aus der Datei an
+                  )),
 
   # ------------------- Sidebar -------------------------------------------------------------------------#
   dashboardSidebar(
@@ -109,8 +114,15 @@ dashboardPage(
           # Downloadbutton, style definiert die position
           downloadButton("downloadPlot", style = "display: block; margin-left: 50px; margin-right: 50px;")
           )
+      ),
+      menuItem(
+        text = "Session Info",
+        tabName = "SessionInfo",
+        icon = icon("circle-info")
       )
-    )
+    ),
+    actionButton("show_changelog", "Changelog anzeigen", icon = icon("circle-info"))
+    
   ),
 
   # ------------------- Body ----------------------------------------------------------------------------#
@@ -129,11 +141,17 @@ dashboardPage(
         verbatimTextOutput("TextColorTableBoxplot"),
         DTOutput("SelectionGroupBoxplot")
       ),
+      # tab für die barplots
       tabItem(
         tabName = "BarplotsWithDots",
         plotOutput("BarplotsWithDots"),
         verbatimTextOutput("TextColorTableBarplot"),
         DTOutput("SelectionGroupBarplot")
+      ),
+      # tab für die session info
+      tabItem(
+        tabName = "SessionInfo",
+        verbatimTextOutput("sessionInfo")
       )
     ),
 

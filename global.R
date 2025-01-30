@@ -46,3 +46,19 @@ sd_n <- function(Vector) {
 }
 
 print(sessionInfo())
+
+# Lese die changelog.txt Datei ein
+changelog_path <- "changelog.txt"  # Falls die Datei auf einem Shared Drive liegt, Pfad anpassen
+
+if (file.exists(changelog_path)) {
+  changelog_content <- readLines(changelog_path, warn = FALSE)
+  
+  # Nehme die erste Zeile (erste Version)
+  aktuelle_version <- changelog_content[1]
+  
+  # Entferne das Datum für eine saubere Anzeige (optional)
+  aktuelle_version <- sub(" - .*", "", aktuelle_version)  # Entfernt alles nach " - "
+  aktuelle_version <- sub("<b>", "", aktuelle_version)
+} else {
+  aktuelle_version <- "Version unbekannt"
+}
