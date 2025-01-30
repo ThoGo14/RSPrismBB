@@ -122,7 +122,6 @@ dashboardPage(
       )
     ),
     actionButton("show_changelog", "Changelog anzeigen", icon = icon("circle-info"))
-    
   ),
 
   # ------------------- Body ----------------------------------------------------------------------------#
