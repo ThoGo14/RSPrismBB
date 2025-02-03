@@ -36,7 +36,12 @@ server <- function(input, output, session) {
       input$colcut
     ) # Sicherstellen, dass die Datei existiert
     TempDF <- read.xlsx(input$DataTable$datapath, colNames = FALSE) # Datei lesen
-
+    
+    # Falls Datei leer ist, gibt es kein Absturz
+    validate(
+      need(nrow(TempDF) > 1, "Die Datei ist leer oder fehlerhaft.")
+    )
+    
     if (input$InpDat) {
       # Transponiere und setze die erste Zeile als Spaltennamen
       TempDF <- t(TempDF)
