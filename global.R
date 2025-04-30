@@ -4,6 +4,8 @@ pakete <- c(
   "shiny",
   "shinydashboard",
   "shinyjqui",
+  "shinyWidgets",
+  "shinyjs",
   "colourpicker",
   "tidyverse",
   "DT",
@@ -12,7 +14,8 @@ pakete <- c(
   "scales",
   "ggrepel",
   "ggbeeswarm",
-  "RColorBrewer"
+  "RColorBrewer",
+  "sortable"
 )
 
 # Überprüfe, ob Pakete installiert sind, und installiere sie, falls nicht
@@ -25,13 +28,24 @@ installiere_fehlende_pakete <- function(pakete) {
 }
 
 # Max Dateilimit ist nun 100MB
-options(shiny.maxRequestSize = 100 * 1024^2)
+MAX_UPLOAD_SIZE_MB <- 100
+options(shiny.maxRequestSize = MAX_UPLOAD_SIZE_MB * 1024^2)
 
 # Rufe die Funktion auf
-installiere_fehlende_pakete(pakete)
+if (interactive()) {
+  installiere_fehlende_pakete(pakete)
+}
 
 # load all packages
-lapply(pakete, require, character.only = TRUE)
+paket_laden <- function(pakete) {
+  for (pkg in pakete) {
+    if (!require(pkg, character.only = TRUE)) {
+      stop(paste("Paket konnte nicht geladen werden:", pkg))
+    }
+  }
+}
+
+paket_laden(pakete)
 
 # ----------------------------------------------------------------------------------------------------- #
 
@@ -41,14 +55,20 @@ lapply(pakete, require, character.only = TRUE)
 getPalette <- colorRampPalette(brewer.pal(9, "Set1"))
 
 ## Function for the standard deviation of sample (n) not of population (n-1)
-sd_n <- function(Vector) {
-  sd(Vector, na.rm = T) * sqrt((length(na.exclude(Vector)) - 1) / length(na.exclude(Vector)))
+sd_n <- function(x) {
+  x <- na.exclude(x)
+  if (length(x) < 2) return(NA)
+  sd(x) * sqrt((length(x) - 1) / length(x))
 }
 
 print(sessionInfo())
 
 # Lese die changelog.txt Datei ein
 changelog_path <- "changelog.txt"  # Falls die Datei auf einem Shared Drive liegt, Pfad anpassen
+
+# Lese die changelog.txt Datei ein
+changelog_path <- "changelog.txt"  # Falls die Datei auf einem Shared Drive liegt, Pfad anpassen
+aktuelle_version <- "Version unbekannt"
 
 if (file.exists(changelog_path)) {
   changelog_content <- readLines(changelog_path, warn = FALSE)
@@ -59,6 +79,4 @@ if (file.exists(changelog_path)) {
   # Entferne das Datum für eine saubere Anzeige (optional)
   aktuelle_version <- sub(" - .*", "", aktuelle_version)  # Entfernt alles nach " - "
   aktuelle_version <- sub("<b>", "", aktuelle_version)
-} else {
-  aktuelle_version <- "Version unbekannt"
 }

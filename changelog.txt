@@ -1,3 +1,10 @@
+<b>Version 1.5.0 - 2025-04-30:</b>
+- Auswahl und Sortierung sind nun nicht mehr im Sidepanel
+- Auswahl zwischen Barplot und Boxplot ist nun im Hauptfenster
+
+<b>Version 1.4.1 - 2025-04-08:</b>
+- Achsenbeschriftung ist nun in schwarz und nicht in grau
+
 <b>Version 1.4.0 - 2025-01-30:</b>
 - Session Info kann in eigenem Tab in der App angezeigt werden
 - Change Log ergänzt, kann über Button als Pop-Up angezigt werden

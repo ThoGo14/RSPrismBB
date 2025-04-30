@@ -50,14 +50,9 @@ dashboardPage(
         expandedName = "PlotsExpand",
         icon = icon("image"),
         menuItem(
-          text = "Boxplots mit Punkten",
-          tabName = "BoxplotsWithDots",
-          icon = icon("boxes-stacked")
-        ),
-        menuItem(
-          text = "Barplot mit Punkten",
-          tabName = "BarplotsWithDots",
-          icon = icon("chart-simple")
+          text = "Plots erstellen",
+          tabName = "Plots_erstellen",
+          icon = icon("chart-column")
         ),
         # Gruppe für Punktfarbe
         selectInput("dotid", label = "Was definiert die Punktfarbe?", choices = NULL, selectize = TRUE),
@@ -72,30 +67,7 @@ dashboardPage(
         column(6, numericInput("yMax", "Y-Achse Max", value = NA, min = 0)),
         sliderInput("PointSize", label = "Punktgröße", min = 1, max = 10, step = 0.5, value = 2),
         colourInput("Colorpicker", "Colorpicker für Hex-Codes", value = "red"),
-
-        # Wähle die Gruppen aus, die im Plot erscheinen sollen
-        checkboxGroupInput(
-          inputId = "selected_groups",
-          label = "Wähle die Gruppen, die im Plot erscheinen sollen:",
-          choices = NULL,
-          # wird dynamisch basierend auf den Daten gesetzt
-          selected = NULL # standardmäßig keine Gruppen ausgewählt
-        ),
-
-        # Slider für die Reihenfolge der Gruppen, Text und Elemente müssen um 15px eingerückt werden
-        div(
-          style = "margin-left: 15px",
-          tags$h5("Ordne die Gruppen:", style = "margin-bottom: 5px; margin-top: 15px; font-weight: bold"),
-          orderInput(
-            "group_order",
-            label = NULL, # Das Label wird hier leer gelassen, da der Titel schon oben steht
-            items = NULL,
-            class = "btn-group-vertical",
-            width = "auto"
-          )
-        ),
-       
-
+        
         # Zwischenüberschrift
         div(
           h3("Download Optionen", style = "display: block; margin-left: 15px; margin-right: 5px;"),
@@ -133,19 +105,43 @@ dashboardPage(
         verbatimTextOutput("TextTableOutput"),
         DTOutput("data")
       ),
-      # tab für die boxplots
       tabItem(
-        tabName = "BoxplotsWithDots",
-        plotOutput("BoxplotsWithDots"),
+        tabName = "Plots_erstellen",  # dein neuer gemeinsamer Tab
+        tabsetPanel(
+          id = "plot_tabs",  # wichtig für server-seitige Logik
+          type = "tabs",
+          tabPanel("Boxplot", plotOutput("BoxplotsWithDots")),
+          tabPanel("Barplot", plotOutput("BarplotsWithDots"))
+        ),
+        # ab hier alles gemeinsam für beide
         verbatimTextOutput("TextColorTableBoxplot"),
-        DTOutput("SelectionGroupBoxplot")
-      ),
-      # tab für die barplots
-      tabItem(
-        tabName = "BarplotsWithDots",
-        plotOutput("BarplotsWithDots"),
-        verbatimTextOutput("TextColorTableBarplot"),
-        DTOutput("SelectionGroupBarplot")
+        fluidRow(
+          column(
+            width = 12,
+            checkboxGroupButtons(
+              inputId = "selected_groups",
+              label = "Wähle die Gruppen, die im Plot erscheinen sollen:",
+              choices = character(0),
+              selected = character(0),
+              status = "primary",
+              direction = "horizontal",
+              checkIcon = list(yes = icon("check"))
+            )
+          )
+        ),
+        fluidRow(
+          column(
+            width = 12,
+            orderInput(
+              "group_order",
+              label = "Wähle die Reihenfolge der Gruppen:",
+              items = NULL,
+              class = "btn-group",
+              width = "100%"
+            )
+          )
+        ),
+        DTOutput("SelectionGroup")
       ),
       # tab für die session info
       tabItem(

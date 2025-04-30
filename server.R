@@ -96,18 +96,27 @@ server <- function(input, output, session) {
     req(DataTable())
 
     # Aktualisiere die Auswahl für selected_groups
-    updateCheckboxGroupInput(
+    updateCheckboxGroupButtons(
       session,
       inputId = "selected_groups",
       choices = unique(DataTable()[[input$groupnameis]]),
-      selected = unique(DataTable()[[input$groupnameis]])
+      selected = unique(DataTable()[[input$groupnameis]]),
+      status = "primary",        # für Farbe (z.B. "primary" = blau)
+      checkIcon = list(
+        yes = icon("check")      # für sichtbaren Haken
+      )
     )
   })
 
   observeEvent(input$selected_groups, {
     req(DataTable())
     # Filtere die Gruppen basierend auf den ausgewählten Gruppen
-    selected_items <- unique(DataTable()[[input$groupnameis]])[unique(DataTable()[[input$groupnameis]]) %in% input$selected_groups]
+    selected_items <- DataTable() %>% 
+      filter(.data[[input$groupnameis]] %in% input$selected_groups) %>%
+      pull(.data[[input$groupnameis]]) %>%
+      unique()
+      
+      # unique(DataTable()[[input$groupnameis]])[unique(DataTable()[[input$groupnameis]]) %in% input$selected_groups]
 
     # Aktualisiere die Reihenfolge für group_order basierend auf den ausgewählten Gruppen
     updateOrderInput(session,
@@ -116,26 +125,26 @@ server <- function(input, output, session) {
       item_class = "info"
     )
   })
-
-
+  
+  
   # ---------------------------------------- Table for color Boxplot --------------------------------------------
   # Erstelle eine reaktive Tabelle für die Gruppen
-  SelectionGroupBoxplot <- reactiveVal()
+  SelectionGroup <- reactiveVal()
   
   # Beobachte Änderungen an der Tabelle
   observe({
-    req(input$SelectionGroupBoxplot_cell_edit) # Sicherstellen, dass die Tabelle bearbeitet wurde
+    req(input$SelectionGroup_cell_edit) # Sicherstellen, dass die Tabelle bearbeitet wurde
     # select new and old input
-    new_data <- input$SelectionGroupBoxplot_cell_edit
-    old_data <- SelectionGroupBoxplot()
+    new_data <- input$SelectionGroup_cell_edit
+    old_data <- SelectionGroup()
     
     # Ändere die Farbe in der Tabelle
     old_data[new_data$row, "Color"] <- new_data$value
-    SelectionGroupBoxplot(old_data)
+    SelectionGroup(old_data)
   })
   
   # Render die Tabelle
-  output$SelectionGroupBoxplot <- renderDT(
+  output$SelectionGroup <- renderDT(
     {
       req(DataTable())
       
@@ -146,7 +155,7 @@ server <- function(input, output, session) {
         "GroupID" = sort(unique(DataTable()[[input$dotid]])),
         "Color" = getPalette(colourcount)
       )
-      SelectionGroupBoxplot(TempDF) # Setze die reaktive Tabelle
+      SelectionGroup(TempDF) # Setze die reaktive Tabelle
       return(TempDF)
     },
     # Erste Spalte mit Gruppennamen darf nicht bearbeitet werden
@@ -158,50 +167,10 @@ server <- function(input, output, session) {
     options = list(dom = "t", pageLength = -1)
   )
   
-  # ---------------------------------------- Table for color Barplot --------------------------------------------
-  # Erstelle eine reaktive Tabelle für die Gruppen
-  SelectionGroupBarplot <- reactiveVal()
-  
-  # Beobachte Änderungen an der Tabelle
-  observe({
-    req(input$SelectionGroupBarplot_cell_edit) # Sicherstellen, dass die Tabelle bearbeitet wurde
-    # select new and old input
-    new_data <- input$SelectionGroupBarplot_cell_edit
-    old_data <- SelectionGroupBarplot()
-    
-    # Ändere die Farbe in der Tabelle
-    old_data[new_data$row, "Color"] <- new_data$value
-    SelectionGroupBarplot(old_data)
-  })
-  
-  # Render die Tabelle
-  output$SelectionGroupBarplot <- renderDT(
-    {
-      req(DataTable())
-      
-      # Wie viele Farben benötigt
-      colourcount <- length(unique(DataTable()[[input$dotid]]))
-      # Tabelle für default farben
-      TempDF <- data.frame(
-        "GroupID" = unique(DataTable()[[input$dotid]]),
-        "Color" = getPalette(colourcount)
-      )
-      SelectionGroupBarplot(TempDF) # Setze die reaktive Tabelle
-      return(TempDF)
-    },
-    # Erste Spalte mit Gruppennamen darf nicht bearbeitet werden
-    editable = list(target = "row", disable = list(columns = c(0))),
-    # keine Zeilenauswahl möglich
-    rownames = FALSE,
-    selection = "none",
-    # zeige nur die Tabelle an
-    options = list(dom = "t")
-  )
-  
   # ---------------------------------------- BoxplotsWithDots-----------------------------------------------
   # Render den Plot
   output$BoxplotsWithDots <- renderPlot({
-    req(SelectionGroupBoxplot()) # Sicherstellen, dass die Tabelle vorhanden ist
+    req(SelectionGroup()) # Sicherstellen, dass die Tabelle vorhanden ist
     p <- BoxplotInput()
     plot(p)
   })
@@ -211,7 +180,7 @@ server <- function(input, output, session) {
     req(
       input$selected_groups,
       input$group_order,
-      SelectionGroupBoxplot()
+      SelectionGroup()
     ) # Sicherstellen, dass die Tabelle vorhanden ist
     
     # daten Filtern, welche im Sidepanel gewählt werden
@@ -254,7 +223,7 @@ server <- function(input, output, session) {
       ) +
       scale_colour_manual(
         name = input$dotid,
-        values = setNames(SelectionGroupBoxplot()[["Color"]], SelectionGroupBoxplot()[["GroupID"]]) 
+        values = setNames(SelectionGroup()[["Color"]], SelectionGroup()[["GroupID"]]) 
       ) +
       {
         if (is.numeric(y_min) | is.numeric(y_max)) {
@@ -262,7 +231,7 @@ server <- function(input, output, session) {
         }
       } +
       theme(
-        axis.text = element_text(size = 16),
+        axis.text = element_text(size = 16, color = "black"),
         axis.title = element_text(size = 16),
         axis.text.x = element_text(angle = 45, hjust = 1),
         legend.text = element_text(size = 16),
@@ -274,7 +243,10 @@ server <- function(input, output, session) {
   # ---------------------------------------- BarplotsWithDots ----------------------------------------------
   # Render den Plot
   output$BarplotsWithDots <- renderPlot({
-    req(SelectionGroupBarplot()) # Sicherstellen, dass die Tabelle vorhanden ist
+    req(
+      # SelectionGroupBarplot(),
+      SelectionGroup()
+      ) # Sicherstellen, dass die Tabelle vorhanden ist
     p <- BarplotInput()
     plot(p)
   })
@@ -284,7 +256,8 @@ server <- function(input, output, session) {
     req(
       input$selected_groups,
       input$group_order,
-      SelectionGroupBarplot()
+      # SelectionGroupBarplot(),
+      SelectionGroup()
     ) # Sicherstellen, dass die Tabelle vorhanden ist
     
     # daten Filtern, welche im Sidepanel gewählt werden
@@ -359,7 +332,7 @@ server <- function(input, output, session) {
       ) +
       scale_colour_manual(
         name = input$dotid,
-        values = setNames(SelectionGroupBarplot()[["Color"]], SelectionGroupBarplot()[["GroupID"]])
+        values = setNames(SelectionGroup()[["Color"]], SelectionGroup()[["GroupID"]])
       ) +
       {
         if (is.numeric(y_min) | is.numeric(y_max)) {
@@ -367,7 +340,7 @@ server <- function(input, output, session) {
         }
       } +
       theme(
-        axis.text = element_text(size = 16),
+        axis.text = element_text(size = 16, color = "black"),
         axis.title = element_text(size = 16),
         axis.text.x = element_text(angle = 45, hjust = 1),
         legend.text = element_text(size = 16),
@@ -391,12 +364,6 @@ server <- function(input, output, session) {
 
   # Text als erklärung
   output$TextColorTableBoxplot <- renderText({
-    req(DataTable())
-    TextColorTable
-  })
-
-  # Text als erklärung
-  output$TextColorTableBarplot <- renderText({
     req(DataTable())
     TextColorTable
   })
@@ -429,11 +396,12 @@ server <- function(input, output, session) {
     # plot speichern
     content = function(file) {
       # Überprüfe den aktiven Tab
-      selected_plot <- if (input$tabs == "BoxplotsWithDots") {
-        BoxplotInput() # Für Boxplots
-      } else if (input$tabs == "BarplotsWithDots") {
-        BarplotInput() # Für Barplots
+      selected_plot <- if (input$plot_tabs == "Boxplot") {
+        BoxplotInput()
+      } else if (input$plot_tabs == "Barplot") {
+        BarplotInput()
       }
+      
 
       if (input$ImageFiletype == "png") {
         # Speichern als PNG
