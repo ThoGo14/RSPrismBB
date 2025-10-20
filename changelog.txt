@@ -1,3 +1,6 @@
+<b>Version 1.5.1 - 2025-10-20:</b>
+- Bugfix: Arial Schriftart wird in der PDF nun korrekt dargestellt
+
 <b>Version 1.5.0 - 2025-04-30:</b>
 - Auswahl und Sortierung sind nun nicht mehr im Sidepanel
 - Auswahl zwischen Barplot und Boxplot ist nun im Hauptfenster

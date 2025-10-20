@@ -16,7 +16,7 @@ pakete <- c(
   "ggbeeswarm",
   "RColorBrewer",
   "sortable"
-)
+  )
 
 # Überprüfe, ob Pakete installiert sind, und installiere sie, falls nicht
 installiere_fehlende_pakete <- function(pakete) {

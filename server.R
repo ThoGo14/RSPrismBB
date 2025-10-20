@@ -419,7 +419,7 @@ server <- function(input, output, session) {
         ggsave(
           filename = file,
           plot = selected_plot,
-          device = "pdf",
+          device = cairo_pdf,
           width = as.numeric(input$ImageWidth),
           height = as.numeric(input$ImageHeight),
           units = "cm",
