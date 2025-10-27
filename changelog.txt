@@ -1,3 +1,6 @@
+<b>Version 1.5.2 - 2025-10-27:</b>
+- Neu: Bilder können nun als .svg gespeichert werden, und sommit korrekt in Inkscape eingelesen
+
 <b>Version 1.5.1 - 2025-10-20:</b>
 - Bugfix: Arial Schriftart wird in der PDF nun korrekt dargestellt
 

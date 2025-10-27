@@ -234,6 +234,7 @@ server <- function(input, output, session) {
         axis.text = element_text(size = 16, color = "black"),
         axis.title = element_text(size = 16),
         axis.text.x = element_text(angle = 45, hjust = 1),
+        axis.line = element_line(color = "#000001"),
         legend.text = element_text(size = 16),
         legend.title = element_text(size = 16),
         plot.title = element_text(size = 16, hjust = 0.5, face = ifelse(input$TitelKursiv, "italic", "plain"))
@@ -343,6 +344,7 @@ server <- function(input, output, session) {
         axis.text = element_text(size = 16, color = "black"),
         axis.title = element_text(size = 16),
         axis.text.x = element_text(angle = 45, hjust = 1),
+        axis.line = element_line(color = "#000001"),
         legend.text = element_text(size = 16),
         legend.title = element_text(size = 16),
         plot.title = element_text(size = 16, hjust = 0.5, face = ifelse(input$TitelKursiv, "italic", "plain"))
@@ -425,6 +427,29 @@ server <- function(input, output, session) {
           units = "cm",
           dpi = input$ImageDPI
         )
+      } else if (input$ImageFiletype == "svg") {
+        # Speichern als SVG
+        
+        TempFile <- tempfile(fileext = ".svg")
+        ggsave(
+          filename = TempFile,
+          plot = selected_plot,
+          device = "svg",
+          width = as.numeric(input$ImageWidth),
+          height = as.numeric(input$ImageHeight),
+          units = "cm",
+          dpi = input$ImageDPI
+        )
+        
+        x <- readLines(TempFile)
+        print("X ohne bereinungen:")
+        print(x)
+        x <- str_remove(x, " textLength='[0-9.]+px'")
+        x <- str_remove(x, " lengthAdjust='[a-zA-Z]+'")
+        
+        print("X mit bereinungen:")
+        print(x)
+        writeLines(x, con = file)
       }
     }
   )
