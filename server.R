@@ -442,13 +442,8 @@ server <- function(input, output, session) {
         )
         
         x <- readLines(TempFile)
-        print("X ohne bereinungen:")
-        print(x)
         x <- str_remove(x, " textLength='[0-9.]+px'")
         x <- str_remove(x, " lengthAdjust='[a-zA-Z]+'")
-        
-        print("X mit bereinungen:")
-        print(x)
         writeLines(x, con = file)
       }
     }
