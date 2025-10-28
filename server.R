@@ -428,21 +428,18 @@ server <- function(input, output, session) {
           dpi = input$ImageDPI
         )
       } else if (input$ImageFiletype == "svg") {
-        # ---- Speichern als SVG mit Base-R Gerät (kein systemfonts nötig) ----
-        cm_to_in <- function(x) as.numeric(x) / 2.54
-        TempFile <- tempfile(fileext = ".svg")
+        # Speichern als SVG
         
-        # Tipp: dpi ist bei SVG irrelevant; Breite/Höhe sind in Inch.
-        grDevices::svg(
-          filename  = TempFile,
-          width     = cm_to_in(input$ImageWidth),
-          height    = cm_to_in(input$ImageHeight),
-          pointsize = 12,             # Basis-Textgröße; ggplot-Theme überschreibt i.d.R.
-          onefile   = FALSE           # eine Seite
-          # ,family = "Arial"         # optional; ggplot-Theme(family="Arial") reicht meist
+        TempFile <- tempfile(fileext = ".svg")
+        ggsave(
+          filename = TempFile,
+          plot = selected_plot,
+          device = "svg",
+          width = as.numeric(input$ImageWidth),
+          height = as.numeric(input$ImageHeight),
+          units = "cm",
+          dpi = input$ImageDPI
         )
-        print(selected_plot)
-        grDevices::dev.off()
         
         x <- readLines(TempFile)
         x <- str_remove(x, " textLength='[0-9.]+px'")
