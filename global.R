@@ -15,7 +15,8 @@ pakete <- c(
   "ggrepel",
   "ggbeeswarm",
   "RColorBrewer",
-  "sortable"
+  "sortable",
+  "svglite"
   )
 
 # Überprüfe, ob Pakete installiert sind, und installiere sie, falls nicht
