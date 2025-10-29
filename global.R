@@ -15,8 +15,7 @@ pakete <- c(
   "ggrepel",
   "ggbeeswarm",
   "RColorBrewer",
-  "sortable",
-  "svglite"
+  "sortable"
   )
 
 # Überprüfe, ob Pakete installiert sind, und installiere sie, falls nicht
@@ -47,6 +46,8 @@ paket_laden <- function(pakete) {
 }
 
 paket_laden(pakete)
+
+try(require(svglite), silent = TRUE)
 
 # ----------------------------------------------------------------------------------------------------- #
 
