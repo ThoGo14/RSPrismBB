@@ -431,14 +431,30 @@ server <- function(input, output, session) {
         # Speichern als SVG
         
         TempFile <- tempfile(fileext = ".svg")
-        ggsave(
-          filename = TempFile,
-          plot = selected_plot,
-          device = "svg",
-          width = as.numeric(input$ImageWidth),
-          height = as.numeric(input$ImageHeight),
-          units = "cm",
-          dpi = input$ImageDPI
+        
+        ## try saving with ggsave otherwise use svg()
+        tryCatch( 
+          {
+            ggsave(
+              filename = TempFile,
+              plot = selected_plot,
+              device = "svg",
+              width = as.numeric(input$ImageWidth),
+              height = as.numeric(input$ImageHeight),
+              units = "cm",
+              dpi = input$ImageDPI
+            )
+          },
+          error = function(e) {
+            svg(
+              filename = TempFile,
+              width = as.numeric(input$ImageWidth) / 2.54,
+              height = as.numeric(input$ImageHeight) / 2.54
+            )
+            print(selected_plot)
+            dev.off()
+            showNotification("SVG wurde mit der base svg-Funktion gespeichert.", type = "warning")
+          }
         )
         
         x <- readLines(TempFile)
