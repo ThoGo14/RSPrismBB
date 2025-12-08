@@ -337,17 +337,30 @@ server <- function(input, output, session) {
         x = input$LabelX
       ) +
       {
-        if (input$InvertPoint) {
+        if (input$InvertPoint && input$BoxColor && input$dotid == input$groupnameis) {
+          # Beide aktiviert
+          list(
+            scale_colour_manual(
+              name = input$dotid,
+              values = setNames(SelectionGroup()[["Color"]], SelectionGroup()[["GroupID"]]),
+            ),
+            scale_fill_manual(
+              name = input$dotid,
+              values = setNames(SelectionGroup()[["Color"]], SelectionGroup()[["GroupID"]])
+            )
+          )
+        } else if (input$InvertPoint) {
+          # Nur InvertPoint
           scale_colour_manual(
             name = input$dotid,
-            values = setNames(SelectionGroup()[["Color"]], SelectionGroup()[["GroupID"]]) 
+            values = setNames(SelectionGroup()[["Color"]], SelectionGroup()[["GroupID"]])
           )
         } else {
+          # Normal
           scale_fill_manual(
             name = input$dotid,
             values = setNames(SelectionGroup()[["Color"]], SelectionGroup()[["GroupID"]])
           )
-          
         }
       } +
       {
@@ -501,10 +514,21 @@ server <- function(input, output, session) {
         y = input$LabelY,
         x = input$LabelX
       ) +
-      scale_colour_manual(
-        name = input$dotid,
-        values = setNames(SelectionGroup()[["Color"]], SelectionGroup()[["GroupID"]])
-      ) +
+      {
+        if (input$InvertPoint) {
+          # Nur InvertPoint
+          scale_colour_manual(
+            name = input$dotid,
+            values = setNames(SelectionGroup()[["Color"]], SelectionGroup()[["GroupID"]])
+          )
+        } else {
+          # Normal
+          scale_fill_manual(
+            name = input$dotid,
+            values = setNames(SelectionGroup()[["Color"]], SelectionGroup()[["GroupID"]])
+          )
+        }
+      } +
       {
         if (is.numeric(y_min) | is.numeric(y_max)) {
           ylim(c(y_min, y_max))
