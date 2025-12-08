@@ -108,7 +108,23 @@ dashboardPage(
       # tab für die Tabelle
       tabItem(
         tabName = "data",
-        verbatimTextOutput("TextTableOutput"),
+        # verbatimTextOutput("TextTableOutput"),
+        box(
+          title = "Daten Tabelle",
+          status = "info",
+          solidHeader = TRUE,
+          width = 12,
+          collapsible = FALSE,
+          "Die Daten können als Excel-Datei (.xlsx) hochgeladen werden. Die Datei darf maximal 100MB groß sein.",
+          br(),
+          "Stelle sicher, dass die Daten korrekt formatiert sind, bevor du sie hochlädst. Numerische Werte sollten als solche erkannt werden.",
+          br(),
+          "Wenn die Daten eines Parameters (z.B. Gene) pro Reihe bzw. Zeile angegeben sind (z.B. Array-Daten), aktiviere die entsprechende Option im Seitenmenü.",
+          br(),
+          "Gib die Spaltennummer an, bevor numerische Werte in der Tabelle beginnen, um eine korrekte Konvertierung sicherzustellen.",
+          br(),
+          "Nach dem Hochladen werden die Daten verarbeitet und die ersten 10 Zeilen und 10 Spalten der Tabelle angezeigt."
+        ),
         DTOutput("data")
       ),
       tabItem(
@@ -126,7 +142,7 @@ dashboardPage(
         
         # Informationstext zu den Plot Optionen
         box(
-          title = "ℹ️ Information",
+          title = "Information",
           status = "info",
           solidHeader = TRUE,
           width = 12,
