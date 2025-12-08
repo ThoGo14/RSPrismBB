@@ -1,3 +1,10 @@
+<b>Version 1.6.0 - 2025-12-08:</b>
+- Neu: Tatsächliche Bildgröße wird angezeigt. Kann über Download Optionen angepasst werden
+- Neu: Color Picker ist nun interaktiv, nicht mehr als Tabelle
+- Neu: Legenden Titel kann ausgeplendet werden
+- Neu: Boxplot Farben können aktiviert werden, wenn Gruppe und Punktfarbe gleich sind!
+- Neu: Punktfarbe kann invertiert werden (Farbe als Füllung oder als Rand)
+
 <b>Version 1.5.2 - 2025-10-27:</b>
 - Neu: Bilder können nun als .svg gespeichert werden, und sommit korrekt in Inkscape eingelesen
 

@@ -127,53 +127,139 @@ server <- function(input, output, session) {
   })
   
   
-  # ---------------------------------------- Table for color Boxplot --------------------------------------------
+  # ---------------------------------------- Color Picker for Groups --------------------------------------------
   # Erstelle eine reaktive Tabelle für die Gruppen
   SelectionGroup <- reactiveVal()
   
-  # Beobachte Änderungen an der Tabelle
-  observe({
-    req(input$SelectionGroup_cell_edit) # Sicherstellen, dass die Tabelle bearbeitet wurde
-    # select new and old input
-    new_data <- input$SelectionGroup_cell_edit
-    old_data <- SelectionGroup()
+  # Speichere die Farbzuordnungen persistent
+  ColorStorage <- reactiveVal(data.frame(GroupID = character(), Color = character(), stringsAsFactors = FALSE))
+  
+  # Dynamisch Color Picker generieren basierend auf group_order
+  output$ColorPickerUI <- renderUI({
+    req(DataTable(), input$selected_groups, input$group_order, input$dotid)
     
-    # Ändere die Farbe in der Tabelle
-    old_data[new_data$row, "Color"] <- new_data$value
-    SelectionGroup(old_data)
+    # Hole gespeicherte Farben oder erstelle Defaults
+    # WICHTIG: isolate() verhindert Re-Rendering wenn sich Farben ändern
+    stored_colors <- isolate(ColorStorage())
+    all_groups <- sort(unique(DataTable()[[input$dotid]]))
+    
+    # Prüfe ob die gespeicherten Farben zu den aktuellen Gruppen passen
+    stored_groups <- stored_colors$GroupID
+    groups_match <- length(stored_groups) == length(all_groups) && all(all_groups %in% stored_groups)
+    
+    # Wenn noch keine Farben gespeichert sind ODER die Gruppen nicht passen, erstelle neue Defaults
+    if (nrow(stored_colors) == 0 || !groups_match) {
+      colourcount <- length(all_groups)
+      default_colors <- getPalette(colourcount)
+      stored_colors <- data.frame(
+        GroupID = all_groups,
+        Color = default_colors,
+        stringsAsFactors = FALSE
+      )
+      isolate(ColorStorage(stored_colors))
+    }
+    
+    # Bestimme welche Gruppen angezeigt werden sollen
+    if (input$dotid == input$groupnameis) {
+      # Verwende die Reihenfolge von group_order (nur ausgewählte Gruppen)
+      groups <- input$group_order
+    } else {
+      # Zeige alle unique Werte von dotid (sortiert)
+      groups <- all_groups
+    }
+    
+    # Erstelle Color Picker nur für die ausgewählten Gruppen in der richtigen Reihenfolge
+    color_pickers <- map(seq_along(groups), function(i) {
+      group <- groups[i]
+      # Finde die gespeicherte Farbe für diese Gruppe
+      color_idx <- which(stored_colors$GroupID == group)
+      current_color <- if (length(color_idx) > 0) stored_colors$Color[color_idx] else "#FF0000"
+      
+      column(
+        width = 3,
+        colourInput(
+          inputId = paste0("color_", make.names(group)),
+          label = as.character(group),
+          value = current_color,
+          showColour = "both",
+          allowedCols = NULL
+        )
+      )
+    })
+    # Zeige die Color Picker in einem Grid an
+    fluidRow(color_pickers)
   })
   
-  # Render die Tabelle
-  output$SelectionGroup <- renderDT(
-    {
-      req(DataTable())
+  # Sammle alle ausgewählten Farben (für alle Gruppen, nicht nur selected)
+  observe({
+    req(DataTable())
+    
+    all_groups <- sort(unique(DataTable()[[input$dotid]]))
+    stored_colors <- ColorStorage()
+    
+    # Warte bis alle Inputs vorhanden sind
+    all_inputs_exist <- all(sapply(all_groups, function(g) {
+      !is.null(input[[paste0("color_", make.names(g))]])
+    }))
+    
+    if (all_inputs_exist) {
+      # Aktualisiere die Farben für alle Gruppen
+      colors <- sapply(all_groups, function(g) {
+        color_input <- input[[paste0("color_", make.names(g))]]
+        if (!is.null(color_input)) {
+          return(color_input)
+        } else {
+          # Falls kein Input vorhanden, behalte die gespeicherte Farbe
+          idx <- which(stored_colors$GroupID == g)
+          if (length(idx) > 0) return(stored_colors$Color[idx])
+          return("#FF0000")
+        }
+      })
       
-      # Wie viele Farben benötigt
-      colourcount <- length(unique(DataTable()[[input$dotid]]))
-      # Tabelle für default farben
       TempDF <- data.frame(
-        "GroupID" = sort(unique(DataTable()[[input$dotid]])),
-        "Color" = getPalette(colourcount)
+        "GroupID" = all_groups,
+        "Color" = colors,
+        stringsAsFactors = FALSE
       )
-      SelectionGroup(TempDF) # Setze die reaktive Tabelle
-      return(TempDF)
-    },
-    # Erste Spalte mit Gruppennamen darf nicht bearbeitet werden
-    editable = list(target = "row", disable = list(columns = c(0))),
-    # keine Zeilenauswahl möglich
-    rownames = FALSE,
-    selection = "none",
-    # zeige nur die Tabelle an
-    options = list(dom = "t", pageLength = -1)
-  )
+      
+      ColorStorage(TempDF)
+      SelectionGroup(TempDF)
+    }
+  })
   
   # ---------------------------------------- BoxplotsWithDots-----------------------------------------------
   # Render den Plot
   output$BoxplotsWithDots <- renderPlot({
-    req(SelectionGroup()) # Sicherstellen, dass die Tabelle vorhanden ist
+    req(SelectionGroup(), input$selected_groups, input$group_order)
+    # Stelle sicher, dass SelectionGroup Daten hat
+    validate(
+      need(nrow(SelectionGroup()) > 0, "ColorPicker wird geladen")
+    )
     p <- BoxplotInput()
     plot(p)
-  })
+  },
+  width = function() {
+    w <- input$ImageWidth
+    if (!is.null(w) && !is.na(w)) {
+      w_num <- as.numeric(w)
+      if (!is.na(w_num) && w_num > 0) {
+        return(w_num * 37.795)
+      }
+    }
+    return(800)
+  },
+  height = function() {
+    h <- input$ImageHeight
+    if (!is.null(h) && !is.na(h)) {
+      h_num <- as.numeric(h)
+      if (!is.na(h_num) && h_num > 0) {
+        return(h_num * 37.795)
+      }
+    }
+    return(600)
+  },
+  res = 96
+  )
   
   # plot erstellen
   BoxplotInput <- reactive({
@@ -206,25 +292,64 @@ server <- function(input, output, session) {
     # erste plot mit ggplot
     p <- ordered_data %>%
       ggplot(aes(x = .data[[input$groupnameis]], y = .data[[input$DataY]])) +
-      geom_boxplot(outlier.color = NA) +
-      geom_beeswarm(
-        aes(colour = as.factor(.data[[input$dotid]])),
-        shape = 21,
-        fill = "black",
-        cex = 1.2,
-        size = input$PointSize,
-        stroke = input$PointSize / 3
-      ) +
+      {
+        if (input$BoxColor && input$dotid == input$groupnameis) {
+          geom_boxplot(aes(fill = as.factor(.data[[input$dotid]])), alpha = 0.3, outlier.shape = NA)
+        } else {
+          geom_boxplot(outlier.shape = NA)
+        }
+      } +
+      {
+        if (input$InvertPoint) {
+          geom_beeswarm(
+            data = ordered_data,
+            aes(
+              x = .data[[input$groupnameis]],
+              y = .data[[input$DataY]],
+              colour = as.factor(.data[[input$dotid]])
+            ),
+            shape = 21,
+            fill = "black",
+            cex = 1.2,
+            size = input$PointSize,
+            stroke = input$PointSize / 3
+          )
+        } else {
+          geom_beeswarm(
+            data = ordered_data,
+            aes(
+              x = .data[[input$groupnameis]],
+              y = .data[[input$DataY]],
+              fill = as.factor(.data[[input$dotid]])
+            ),
+            shape = 21,
+            color = "black",
+            cex = 1.2,
+            size = input$PointSize,
+            stroke = input$PointSize / 3
+          )
+        }
+      } +
       theme_classic() +
       labs(
         title = input$DataY,
         y = input$LabelY,
         x = input$LabelX
       ) +
-      scale_colour_manual(
-        name = input$dotid,
-        values = setNames(SelectionGroup()[["Color"]], SelectionGroup()[["GroupID"]]) 
-      ) +
+      {
+        if (input$InvertPoint) {
+          scale_colour_manual(
+            name = input$dotid,
+            values = setNames(SelectionGroup()[["Color"]], SelectionGroup()[["GroupID"]]) 
+          )
+        } else {
+          scale_fill_manual(
+            name = input$dotid,
+            values = setNames(SelectionGroup()[["Color"]], SelectionGroup()[["GroupID"]])
+          )
+          
+        }
+      } +
       {
         if (is.numeric(y_min) | is.numeric(y_max)) {
           ylim(c(y_min, y_max))
@@ -236,7 +361,11 @@ server <- function(input, output, session) {
         axis.text.x = element_text(angle = 45, hjust = 1),
         axis.line = element_line(color = "#000001"),
         legend.text = element_text(size = 16),
-        legend.title = element_text(size = 16),
+        legend.title = if (!input$LegendenTitel) {
+          element_text(size = 16)
+        } else {
+          element_blank()
+        },
         plot.title = element_text(size = 16, hjust = 0.5, face = ifelse(input$TitelKursiv, "italic", "plain"))
       )
     return(p)
@@ -244,13 +373,36 @@ server <- function(input, output, session) {
   # ---------------------------------------- BarplotsWithDots ----------------------------------------------
   # Render den Plot
   output$BarplotsWithDots <- renderPlot({
-    req(
-      # SelectionGroupBarplot(),
-      SelectionGroup()
-      ) # Sicherstellen, dass die Tabelle vorhanden ist
+    req(SelectionGroup(), input$selected_groups, input$group_order)
+    # Stelle sicher, dass SelectionGroup Daten hat
+    validate(
+      need(nrow(SelectionGroup()) > 0, "ColorPicker wird geladen")
+    )
     p <- BarplotInput()
     plot(p)
-  })
+  },
+  width = function() {
+    w <- input$ImageWidth
+    if (!is.null(w) && !is.na(w)) {
+      w_num <- as.numeric(w)
+      if (!is.na(w_num) && w_num > 0) {
+        return(w_num * 37.795)
+      }
+    }
+    return(800)
+  },
+  height = function() {
+    h <- input$ImageHeight
+    if (!is.null(h) && !is.na(h)) {
+      h_num <- as.numeric(h)
+      if (!is.na(h_num) && h_num > 0) {
+        return(h_num * 37.795)
+      }
+    }
+    return(600)
+  },
+  res = 96
+  )
   
   # plot erstellen
   BarplotInput <- reactive({
@@ -312,19 +464,37 @@ server <- function(input, output, session) {
         ),
         stat = "identity"
       ) +
-      geom_beeswarm(
-        data = ordered_data,
-        aes(
-          x = .data[[input$groupnameis]],
-          y = .data[[input$DataY]],
-          colour = as.factor(.data[[input$dotid]])
-        ),
-        shape = 21,
-        fill = "black",
-        cex = 1.2,
-        size = input$PointSize,
-        stroke = input$PointSize / 3
-      ) +
+      {
+        if (input$InvertPoint) {
+          geom_beeswarm(
+            data = ordered_data,
+            aes(
+              x = .data[[input$groupnameis]],
+              y = .data[[input$DataY]],
+              colour = as.factor(.data[[input$dotid]])
+            ),
+            shape = 21,
+            fill = "black",
+            cex = 1.2,
+            size = input$PointSize,
+            stroke = input$PointSize / 3
+          )
+        } else {
+          geom_beeswarm(
+            data = ordered_data,
+            aes(
+              x = .data[[input$groupnameis]],
+              y = .data[[input$DataY]],
+              fill = as.factor(.data[[input$dotid]])
+            ),
+            shape = 21,
+            color = "black",
+            cex = 1.2,
+            size = input$PointSize,
+            stroke = input$PointSize / 3
+          )
+        }
+      } +
       theme_classic() +
       labs(
         title = input$DataY,
@@ -346,29 +516,30 @@ server <- function(input, output, session) {
         axis.text.x = element_text(angle = 45, hjust = 1),
         axis.line = element_line(color = "#000001"),
         legend.text = element_text(size = 16),
-        legend.title = element_text(size = 16),
+        legend.title = if (!input$LegendenTitel) {
+          element_text(size = 16)
+        } else {
+          element_blank()
+        },
         plot.title = element_text(size = 16, hjust = 0.5, face = ifelse(input$TitelKursiv, "italic", "plain"))
       )
     return(p)
   })
   
   # ---------------------------------------- Erklärung und Text -----------------------------------------------------
-  TextColorTable <-
-    paste0(
-      "INFO\n",
-      "Die nachfolgende Tabelle wird für die Farben im Plot verwendet. Es sind 9 Farben vordefiniert ",
-      "(RColorBrewer --> Set1).\n",
-      "Wenn eine andere Farbe gewünscht ist: Doppelklick auf die Zelle ",
-      "und eine neue Farbe als Name (alles klein geschrieben)\n",
-      "oder als HEX-Code eintragen --> mit 'STRG + ENTER' bestätigen.\n",
-      "Wenn der Fehler '[object Object]' angezeigt wird, ist vermutlich die Farbe falsch definiert."
-    )
-
-  # Text als erklärung
-  output$TextColorTableBoxplot <- renderText({
-    req(DataTable())
-    TextColorTable
-  })
+  # TextColorTable <-
+  #   paste0(
+  #     "INFO\n",
+  #     "Die nachfolgenden Color Picker werden für die Farben im Plot verwendet. Es sind 9 Farben vordefiniert ",
+  #     "(RColorBrewer --> Set1).\n",
+  #     "Klicke auf einen Color Picker, um eine individuelle Farbe für die jeweilige Gruppe auszuwählen."
+  #   )
+  # 
+  # # Text als erklärung
+  # output$TextColorTableBoxplot <- renderText({
+  #   req(DataTable())
+  #   TextColorTable
+  # })
 
   TextTableOutput <-
     paste0(

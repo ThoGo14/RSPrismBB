@@ -1,11 +1,13 @@
 dashboardPage(
   # ------------------- Header -------------------------------------------------------------------------#
-  dashboardHeader(title = "Bar- und Boxplot",
-                  tags$li(
-                    class = "dropdown",
-                    style = "padding: 15px; color: white;",
-                    aktuelle_version  # Zeigt die neueste Version aus der Datei an
-                  )),
+  dashboardHeader(
+    title = "Bar- und Boxplot",
+    tags$li(
+      class = "dropdown",
+      style = "padding: 15px; color: white;",
+      aktuelle_version # Zeigt die neueste Version aus der Datei an
+    )
+  ),
 
   # ------------------- Sidebar -------------------------------------------------------------------------#
   dashboardSidebar(
@@ -63,29 +65,33 @@ dashboardPage(
         textInput("LabelY", label = "Beschriftung Y-Achse", value = "y-Axis"),
         textInput("LabelX", label = "Beschriftung X-Achse", value = NULL),
         checkboxInput("TitelKursiv", label = "Titel kursiv", value = FALSE),
-        column(6, numericInput("yMin", "Y-Achse Min", value = NA, min = 0)),
-        column(6, numericInput("yMax", "Y-Achse Max", value = NA, min = 0)),
+        checkboxInput("LegendenTitel", label = "Legenden Titel ausblenden", value = FALSE),
+        checkboxInput("BoxColor", label = "Boxplot Farbe", value = FALSE),
+        checkboxInput("InvertPoint", label = "Punktfarbe invertieren", value = FALSE),
         sliderInput("PointSize", label = "Punktgröße", min = 1, max = 10, step = 0.5, value = 2),
-        colourInput("Colorpicker", "Colorpicker für Hex-Codes", value = "red"),
+        fluidRow(
+          style = "margin-left: 0px; margin-right: 0px;",
+          column(6, numericInput("yMin", "Y-Achse Min", value = NA, min = 0)),
+          column(6, numericInput("yMax", "Y-Achse Max", value = NA, min = 0))
+        ),
         
         # Zwischenüberschrift
-        div(
-          h3("Download Optionen", style = "display: block; margin-left: 15px; margin-right: 5px;"),
-          # Dateiname
-          textInput("Filename", label = "Bild Dateiname ", placeholder = "Dateiname"),
-          # Bildbreite-, höhe und -auflösung
-          numericInput("ImageWidth", label = "Bildbreite", value = 20),
-          numericInput("ImageHeight", label = "Bildhöhe", value = 20),
-          numericInput("ImageDPI", label = "Bildauflösung (dots per inch)", value = 200),
-          # Bild speichern als png oder PDF
-          radioButtons(
-            "ImageFiletype",
-            label = "Bildformat auswählen",
-            choices = c("png (in cm)" = "png", "pdf (in cm)" = "pdf", "svg (in cm)" = "svg"),
-          ),
-          # Downloadbutton, style definiert die position
-          downloadButton("downloadPlot", style = "display: block; margin-left: 50px; margin-right: 50px;")
-          )
+        tags$hr(style = "margin-top: 20px; margin-bottom: 10px;"),
+        h3("Download Optionen", style = "margin-left: 15px; margin-right: 5px;"),
+        # Dateiname
+        textInput("Filename", label = "Bild Dateiname ", placeholder = "Dateiname"),
+        # Bildbreite-, höhe und -auflösung
+        numericInput("ImageWidth", label = "Bildbreite", value = 20),
+        numericInput("ImageHeight", label = "Bildhöhe", value = 20),
+        numericInput("ImageDPI", label = "Bildauflösung (dots per inch)", value = 200),
+        # Bild speichern als png oder PDF
+        radioButtons(
+          "ImageFiletype",
+          label = "Bildformat auswählen",
+          choices = c("png (in cm)" = "png", "pdf (in cm)" = "pdf", "svg (in cm)" = "svg"),
+        ),
+        # Downloadbutton, style definiert die position
+        downloadButton("downloadPlot", style = "display: block; margin-left: 50px; margin-right: 50px;")
       ),
       menuItem(
         text = "Session Info",
@@ -106,42 +112,73 @@ dashboardPage(
         DTOutput("data")
       ),
       tabItem(
-        tabName = "Plots_erstellen",  # dein neuer gemeinsamer Tab
+        tabName = "Plots_erstellen", # dein neuer gemeinsamer Tab
         tabsetPanel(
-          id = "plot_tabs",  # wichtig für server-seitige Logik
+          id = "plot_tabs", # wichtig für server-seitige Logik
           type = "tabs",
-          tabPanel("Boxplot", plotOutput("BoxplotsWithDots")),
-          tabPanel("Barplot", plotOutput("BarplotsWithDots"))
+          tabPanel("Boxplot", plotOutput("BoxplotsWithDots", height = "auto", width = "auto")),
+          tabPanel("Barplot", plotOutput("BarplotsWithDots", height = "auto", width = "auto"))
         ),
         # ab hier alles gemeinsam für beide
-        verbatimTextOutput("TextColorTableBoxplot"),
-        fluidRow(
-          column(
-            width = 12,
-            checkboxGroupButtons(
-              inputId = "selected_groups",
-              label = "Wähle die Gruppen, die im Plot erscheinen sollen:",
-              choices = character(0),
-              selected = character(0),
-              status = "primary",
-              direction = "horizontal",
-              checkIcon = list(yes = icon("check"))
+
+        # Abstand zwischen Plot und Optionen
+        tags$hr(style = "margin-top: 10px; margin-bottom: 10px;"),
+        
+        # Informationstext zu den Plot Optionen
+        box(
+          title = "ℹ️ Information",
+          status = "info",
+          solidHeader = TRUE,
+          width = 12,
+          collapsible = FALSE,
+          "Die Bildgröße kann in den Download-Optionen angepasst werden. Die Bildvorschau entspricht der tatsächlichen Auflösung des Bildes.",
+          "Wenn der Text abgeschnitten ist, muss entweder der Text oder die Bildgröße angepasst werden.",
+          br(),
+          "Wenn Punktfarbe und Gruppe identisch sind, wird können die Boxplots farbig dargestellt werden."
+        ),
+        
+        box(
+          title = "Gruppen auswählen und Reihenfolge festlegen",
+          status = "primary",
+          solidHeader = TRUE,
+          width = 12,
+          collapsible = FALSE,
+          
+          fluidRow(
+            column(
+              width = 12,
+              checkboxGroupButtons(
+                inputId = "selected_groups",
+                label = "Wähle die Gruppen, die im Plot erscheinen sollen:",
+                choices = character(0),
+                selected = character(0),
+                status = "primary",
+                direction = "horizontal",
+                checkIcon = list(yes = icon("check"))
+              )
+            )
+          ),
+          fluidRow(
+            column(
+              width = 12,
+              orderInput(
+                "group_order",
+                label = "Wähle die Reihenfolge der Gruppen:",
+                items = NULL,
+                class = "btn-group",
+                width = "100%"
+              )
             )
           )
         ),
-        fluidRow(
-          column(
-            width = 12,
-            orderInput(
-              "group_order",
-              label = "Wähle die Reihenfolge der Gruppen:",
-              items = NULL,
-              class = "btn-group",
-              width = "100%"
-            )
-          )
-        ),
-        DTOutput("SelectionGroup")
+        box(
+          title = "Farbpalette anpassen",
+          status = "primary",
+          solidHeader = TRUE,
+          width = 12,
+          collapsible = FALSE,
+          uiOutput("ColorPickerUI")
+        )
       ),
       # tab für die session info
       tabItem(

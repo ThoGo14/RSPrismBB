@@ -16,20 +16,99 @@
 .col-sm-6 {
     padding-right: 0px;
     padding-left: 0px;
-    padding-bottom: 15px;
+    /*padding-bottom: 15px;*/
 }
 
 
 .wrapper {
-    height: 100%;
-    position: relative;
-    overflow-x: hidden;
-    overflow-y: hidden
+    overflow-y: hidden !important;
+    overflow-x: hidden !important;
+
 }
 
+.content-wrapper {
+    overflow-y: hidden !important;
+    overflow-x: hidden !important;
+}
 
-/* Header aendern
-.main-header .logo {
+.content-wrapper, .right-side {
+    background-color: #f4f4f4;
+}
+
+.checkbox {
+    margin-top: 5px;
+    margin-bottom: 0px;
+}
+
+/* Fix für Box-Breite - verhindert horizontalen Überlauf */
+.box .box-body .row {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+}
+
+/* Colourpicker soll sichtbar sein - kein overflow hidden */
+.box {
+    overflow: visible !important;
+    margin-bottom: 20px;
+}
+
+.box-body {
+    overflow: visible !important;
+}
+
+section.content {
+    padding: 15px;
+    overflow: visible !important;
+}
+
+/* Color Picker Container - scrollbar und genug Platz */
+#ColorPickerUI {
+    max-height: 800px;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    padding-right: 10px;
+    position: relative;
+    z-index: 1;
+    padding-bottom: 150px;
+}
+
+/* Mehr Abstand zwischen den Color Picker Rows */
+#ColorPickerUI .row {
+    margin-bottom: 0px !important;
+}
+
+/* Abstand zwischen Color Pickern innerhalb einer Row */
+#ColorPickerUI .col-sm-3 {
+    margin-bottom: 5px !important;
+}
+
+/* Stelle sicher dass der colourpicker Popup über allem anderen liegt */
+.colourpicker-wrapper {
+    position: relative;
+    z-index: 9999 !important;
+}
+
+/* Der eigentliche Farbwähler-Popup */
+.sp-container {
+    z-index: 10000 !important;
+    position: absolute !important;
+}
+
+/* Download Button - Fix für ausgegrautes Aussehen */
+#downloadPlot, #downloadPlot:hover, #downloadPlot:focus {
+    background-color: #3c8dbc !important;
+    color: white !important;
+    border-color: #367fa9 !important;
+    opacity: 1 !important;
+    margin-bottom: 10px;
+}
+
+#downloadPlot:hover {
+    background-color: #367fa9 !important;
+}
+
+/* Header aendern */
+/*.main-header .logo {
     font-family: "Georgia", Times, "Times New Roman", serif;
     font-weight: bold;
     font-size: 24px;
