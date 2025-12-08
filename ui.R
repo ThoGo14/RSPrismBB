@@ -31,7 +31,7 @@ dashboardPage(
           accept = c(".xlsx"),
           placeholder = "Max. 100MB"
         ),
-        # Da der Abstadn viel zu groß ist, wird er hiermit reduziert
+        # Da der Abstand viel zu groß ist, wird er hiermit reduziert
         div(style = "margin-top: -30px"),
         # array daten oder nicht
         checkboxInput(

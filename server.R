@@ -551,30 +551,6 @@ server <- function(input, output, session) {
   })
   
   # ---------------------------------------- Erklärung und Text -----------------------------------------------------
-  # TextColorTable <-
-  #   paste0(
-  #     "INFO\n",
-  #     "Die nachfolgenden Color Picker werden für die Farben im Plot verwendet. Es sind 9 Farben vordefiniert ",
-  #     "(RColorBrewer --> Set1).\n",
-  #     "Klicke auf einen Color Picker, um eine individuelle Farbe für die jeweilige Gruppe auszuwählen."
-  #   )
-  # 
-  # # Text als erklärung
-  # output$TextColorTableBoxplot <- renderText({
-  #   req(DataTable())
-  #   TextColorTable
-  # })
-
-  TextTableOutput <-
-    paste0(
-      "VORSCHAU:\n",
-      "Die ersten 10 Zeilen und 10 Spalten der Input-Tabelle werden angezeigt."
-    )
-
-  output$TextTableOutput <- renderText({
-    req(DataTable())
-    TextTableOutput
-  })
 
   output$sessionInfo <- renderPrint({
     sessionInfo() # Gibt die Session-Info direkt als Ausgabe zurück
