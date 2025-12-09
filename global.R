@@ -67,9 +67,6 @@ print(sessionInfo())
 
 # Lese die changelog.txt Datei ein
 changelog_path <- "changelog.txt"  # Falls die Datei auf einem Shared Drive liegt, Pfad anpassen
-
-# Lese die changelog.txt Datei ein
-changelog_path <- "changelog.txt"  # Falls die Datei auf einem Shared Drive liegt, Pfad anpassen
 aktuelle_version <- "Version unbekannt"
 
 if (file.exists(changelog_path)) {
