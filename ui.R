@@ -1,11 +1,22 @@
 dashboardPage(
   # ------------------- Header -------------------------------------------------------------------------#
   dashboardHeader(
-    title = "Bar- und Boxplot",
+    title = textOutput("app_title_header", inline = TRUE),
     tags$li(
       class = "dropdown",
       style = "padding: 15px; color: white;",
       aktuelle_version # Zeigt die neueste Version aus der Datei an
+    ),
+    tags$li(
+      class = "dropdown",
+      style = "padding: 8px;",
+      selectInput(
+        "selected_language",
+        label = NULL,
+        choices = c("Deutsch" = "de", "English" = "en"),
+        selected = "de",
+        width = "120px"
+      )
     )
   ),
 
@@ -15,91 +26,91 @@ dashboardPage(
       id = "tabs", # Tab-Panel ID hinzufügen, aktiver tab in input$tabs
       # Tab für Daten eingabe
       menuItem(
-        text = "Data Input",
+        text = translator$tl("data_input"),
         expandedName = "dataTabExpand",
         icon = icon("arrow-up-from-bracket"),
         menuItem(
-          text = "Data Table",
+          text = translator$tl("data_table"),
           tabName = "data",
           icon = icon("table")
         ),
         # Datei upload
         fileInput(
           "DataTable",
-          "Upload a data file:",
+          translator$tl("upload_file"),
           multiple = FALSE,
           accept = c(".xlsx"),
-          placeholder = "Max. 100MB"
+          placeholder = translator$tl("max_size")
         ),
         # Da der Abstand viel zu groß ist, wird er hiermit reduziert
         div(style = "margin-top: -30px"),
         # array daten oder nicht
         checkboxInput(
           "InpDat",
-          label = "Sind die Daten eines Parameters (zbsp. Gene) pro Reihe bzw. Zeile angegeben (zbsp. Array data)?",
+          label = translator$tl("array_data_question"),
           value = FALSE
         ),
 
         # Ab wann sind in der Tabelle Nummerische Daten (für konvertierung)
-        numericInput("colcut", label = "Spaltennummer bevor nummerische Werte kommen:", value = 0, min = 0),
+        numericInput("colcut", label = translator$tl("column_before_numeric"), value = 0, min = 0),
         # Am anfang direkt ausgeklappt
         startExpanded = TRUE
       ),
 
       # Tab für Boxplot
       menuItem(
-        text = "Plots",
+        text = translator$tl("plots"),
         expandedName = "PlotsExpand",
         icon = icon("image"),
         menuItem(
-          text = "Plots erstellen",
+          text = translator$tl("plots_create"),
           tabName = "Plots_erstellen",
           icon = icon("chart-column")
         ),
         # Gruppe für Punktfarbe
-        selectInput("dotid", label = "Was definiert die Punktfarbe?", choices = NULL, selectize = TRUE),
+        selectInput("dotid", label = translator$tl("dot_color_question"), choices = NULL, selectize = TRUE),
         # Spaltenname für Gruppierung
-        selectInput("groupnameis", label = "Welche Spalte soll als Gruppe verwendet werden?", choices = NULL, selectize = TRUE),
+        selectInput("groupnameis", label = translator$tl("group_column_question"), choices = NULL, selectize = TRUE),
         # Plotvariable
-        selectInput("DataY", label = "Was soll auf der Y-Achse geplottet werden?", choices = NULL, selectize = TRUE),
-        textInput("LabelY", label = "Beschriftung Y-Achse", value = "y-Axis"),
-        textInput("LabelX", label = "Beschriftung X-Achse", value = NULL),
-        checkboxInput("TitelKursiv", label = "Titel kursiv", value = FALSE),
-        checkboxInput("LegendenTitel", label = "Legenden Titel ausblenden", value = FALSE),
-        checkboxInput("BoxColor", label = "Boxplot Farbe", value = FALSE),
-        checkboxInput("InvertPoint", label = "Punktfarbe invertieren", value = FALSE),
-        sliderInput("PointSize", label = "Punktgröße", min = 1, max = 10, step = 0.5, value = 2),
+        selectInput("DataY", label = translator$tl("y_axis_variable"), choices = NULL, selectize = TRUE),
+        textInput("LabelY", label = translator$tl("y_axis_label"), value = translator$tl("y_axis")),
+        textInput("LabelX", label = translator$tl("x_axis_label"), value = NULL),
+        checkboxInput("TitelKursiv", label = translator$tl("title_italic"), value = FALSE),
+        checkboxInput("LegendenTitel", label = translator$tl("legend_title_hide"), value = FALSE),
+        checkboxInput("BoxColor", label = translator$tl("boxplot_color"), value = FALSE),
+        checkboxInput("InvertPoint", label = translator$tl("invert_point_color"), value = FALSE),
+        sliderInput("PointSize", label = translator$tl("point_size"), min = 1, max = 10, step = 0.5, value = 2),
         fluidRow(
           style = "margin-left: 0px; margin-right: 0px;",
-          column(6, numericInput("yMin", "Y-Achse Min", value = NA, min = 0)),
-          column(6, numericInput("yMax", "Y-Achse Max", value = NA, min = 0))
+          column(6, numericInput("yMin", translator$tl("y_axis_min"), value = NA, min = 0)),
+          column(6, numericInput("yMax", translator$tl("y_axis_max"), value = NA, min = 0))
         ),
         
         # Zwischenüberschrift
         tags$hr(style = "margin-top: 20px; margin-bottom: 10px;"),
-        h3("Download Optionen", style = "margin-left: 15px; margin-right: 5px;"),
+        h3(textOutput("download_options_header", inline = TRUE), style = "margin-left: 15px; margin-right: 5px;"),
         # Dateiname
-        textInput("Filename", label = "Bild Dateiname ", placeholder = "Dateiname"),
+        textInput("Filename", label = translator$tl("image_filename"), placeholder = translator$tl("dateiname")),
         # Bildbreite-, höhe und -auflösung
-        numericInput("ImageWidth", label = "Bildbreite", value = 20),
-        numericInput("ImageHeight", label = "Bildhöhe", value = 20),
-        numericInput("ImageDPI", label = "Bildauflösung (dots per inch)", value = 200),
+        numericInput("ImageWidth", label = translator$tl("image_width"), value = 20),
+        numericInput("ImageHeight", label = translator$tl("image_height"), value = 20),
+        numericInput("ImageDPI", label = translator$tl("image_dpi"), value = 200),
         # Bild speichern als png oder PDF
         radioButtons(
           "ImageFiletype",
-          label = "Bildformat auswählen",
+          label = translator$tl("image_format"),
           choices = c("png (in cm)" = "png", "pdf (in cm)" = "pdf", "svg (in cm)" = "svg"),
         ),
         # Downloadbutton, style definiert die position
-        downloadButton("downloadPlot", style = "display: block; margin-left: 50px; margin-right: 50px;")
+        downloadButton("downloadPlot", label = translator$tl("download_button"), style = "display: block; margin-left: 50px; margin-right: 50px;")
       ),
       menuItem(
-        text = "Session Info",
+        text = translator$tl("session_info"),
         tabName = "SessionInfo",
         icon = icon("circle-info")
       )
     ),
-    actionButton("show_changelog", "Changelog anzeigen", icon = icon("circle-info"))
+    actionButton("show_changelog", translator$tl("changelog_button"), icon = icon("circle-info"))
   ),
 
   # ------------------- Body ----------------------------------------------------------------------------#
@@ -110,20 +121,20 @@ dashboardPage(
         tabName = "data",
         # verbatimTextOutput("TextTableOutput"),
         box(
-          title = "Daten Tabelle",
+          title = textOutput("data_table_title_out", inline = TRUE),
           status = "info",
           solidHeader = TRUE,
           width = 12,
           collapsible = FALSE,
-          "Die Daten können als Excel-Datei (.xlsx) hochgeladen werden. Die Datei darf maximal 100MB groß sein.",
+          textOutput("data_table_info_1_out"),
           br(),
-          "Stelle sicher, dass die Daten korrekt formatiert sind, bevor du sie hochlädst. Numerische Werte sollten als solche erkannt werden.",
+          textOutput("data_table_info_2_out"),
           br(),
-          "Wenn die Daten eines Parameters (z.B. Gene) pro Reihe bzw. Zeile angegeben sind (z.B. Array-Daten), aktiviere die entsprechende Option im Seitenmenü.",
+          textOutput("data_table_info_3_out"),
           br(),
-          "Gib die Spaltennummer an, bevor numerische Werte in der Tabelle beginnen, um eine korrekte Konvertierung sicherzustellen.",
+          textOutput("data_table_info_4_out"),
           br(),
-          "Nach dem Hochladen werden die Daten verarbeitet und die ersten 10 Zeilen und 10 Spalten der Tabelle angezeigt."
+          textOutput("data_table_info_5_out")
         ),
         DTOutput("data")
       ),
@@ -132,8 +143,8 @@ dashboardPage(
         tabsetPanel(
           id = "plot_tabs", # wichtig für server-seitige Logik
           type = "tabs",
-          tabPanel("Boxplot", plotOutput("BoxplotsWithDots", height = "auto", width = "auto")),
-          tabPanel("Barplot", plotOutput("BarplotsWithDots", height = "auto", width = "auto"))
+          tabPanel(translator$tl("tab_boxplot"), plotOutput("BoxplotsWithDots", height = "auto", width = "auto")),
+          tabPanel(translator$tl("tab_barplot"), plotOutput("BarplotsWithDots", height = "auto", width = "auto"))
         ),
         # ab hier alles gemeinsam für beide
 
@@ -142,19 +153,19 @@ dashboardPage(
         
         # Informationstext zu den Plot Optionen
         box(
-          title = "Information",
+          title = textOutput("info_box_title_out", inline = TRUE),
           status = "info",
           solidHeader = TRUE,
           width = 12,
           collapsible = FALSE,
-          "Die Bildgröße kann in den Download-Optionen angepasst werden. Die Bildvorschau entspricht der tatsächlichen Auflösung des Bildes.",
-          "Wenn der Text abgeschnitten ist, muss entweder der Text oder die Bildgröße angepasst werden.",
+          textOutput("info_box_text_1_out"),
+          textOutput("info_box_text_2_out"),
           br(),
-          "Wenn Punktfarbe und Gruppe identisch sind, wird können die Boxplots farbig dargestellt werden."
+          textOutput("info_box_text_3_out")
         ),
         
         box(
-          title = "Gruppen auswählen und Reihenfolge festlegen",
+          title = textOutput("group_selection_title_out", inline = TRUE),
           status = "primary",
           solidHeader = TRUE,
           width = 12,
@@ -163,32 +174,18 @@ dashboardPage(
           fluidRow(
             column(
               width = 12,
-              checkboxGroupButtons(
-                inputId = "selected_groups",
-                label = "Wähle die Gruppen, die im Plot erscheinen sollen:",
-                choices = character(0),
-                selected = character(0),
-                status = "primary",
-                direction = "horizontal",
-                checkIcon = list(yes = icon("check"))
-              )
+              uiOutput("group_selection_checkbox_ui")
             )
           ),
           fluidRow(
             column(
               width = 12,
-              orderInput(
-                "group_order",
-                label = "Wähle die Reihenfolge der Gruppen:",
-                items = NULL,
-                class = "btn-group",
-                width = "100%"
-              )
+              uiOutput("group_order_ui")
             )
           )
         ),
         box(
-          title = "Farbpalette anpassen",
+          title = textOutput("color_palette_title_out", inline = TRUE),
           status = "primary",
           solidHeader = TRUE,
           width = 12,
@@ -206,6 +203,9 @@ dashboardPage(
     # CSS-Datei für Style
     tags$head(
       tags$link(rel = "stylesheet", type = "text/css", href = "styles.css")
-    )
+    ),
+    
+    # Enable shinyjs for dynamic label updates
+    useShinyjs()
   )
 )

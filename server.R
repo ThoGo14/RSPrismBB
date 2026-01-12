@@ -1,4 +1,111 @@
 server <- function(input, output, session) {
+  # ---------------------------------------- Language Switching -----------------------------------------------
+  
+  # Reactive translator that updates when language changes
+  i18n <- reactive({
+    req(input$selected_language)
+    translator$set_translation_language(input$selected_language)
+    translator
+  })
+  
+  # Helper function to translate
+  tl <- function(key) {
+    translations_json[[input$selected_language %||% "de"]][[key]] %||% key
+  }
+  
+  # Render dynamic text outputs for UI elements
+  output$app_title_header <- renderText({ tl("app_title") })
+  output$download_options_header <- renderText({ tl("download_options") })
+  output$data_table_title_out <- renderText({ tl("data_table_title") })
+  output$data_table_info_1_out <- renderText({ tl("data_table_info_1") })
+  output$data_table_info_2_out <- renderText({ tl("data_table_info_2") })
+  output$data_table_info_3_out <- renderText({ tl("data_table_info_3") })
+  output$data_table_info_4_out <- renderText({ tl("data_table_info_4") })
+  output$data_table_info_5_out <- renderText({ tl("data_table_info_5") })
+  output$info_box_title_out <- renderText({ tl("info_box_title") })
+  output$info_box_text_1_out <- renderText({ tl("info_box_text_1") })
+  output$info_box_text_2_out <- renderText({ tl("info_box_text_2") })
+  output$info_box_text_3_out <- renderText({ tl("info_box_text_3") })
+  output$group_selection_title_out <- renderText({ tl("group_selection_title") })
+  output$color_palette_title_out <- renderText({ tl("color_palette_title") })
+  
+  # Dynamic UI for group selection checkbox
+  output$group_selection_checkbox_ui <- renderUI({
+    req(DataTable())
+    checkboxGroupButtons(
+      inputId = "selected_groups",
+      label = tl("group_selection_label"),
+      choices = unique(DataTable()[[input$groupnameis]]),
+      selected = unique(DataTable()[[input$groupnameis]]),
+      status = "primary",
+      direction = "horizontal",
+      checkIcon = list(yes = icon("check"))
+    )
+  })
+  
+  # Dynamic UI for group order
+  output$group_order_ui <- renderUI({
+    req(DataTable(), input$selected_groups)
+    selected_items <- DataTable() %>% 
+      filter(.data[[input$groupnameis]] %in% input$selected_groups) %>%
+      pull(.data[[input$groupnameis]]) %>%
+      unique()
+    
+    orderInput(
+      "group_order",
+      label = tl("group_order_label"),
+      items = selected_items,
+      class = "btn-group",
+      width = "100%"
+    )
+  })
+  
+  # Update sidebar labels when language changes
+  observeEvent(input$selected_language, {
+    # Update fileInput label
+    shinyjs::runjs(sprintf("$('#DataTable-label').text('%s');", tl("upload_file")))
+
+    # Update selectInput labels
+    updateSelectInput(session, "dotid", label = tl("dot_color_question"))
+    updateSelectInput(session, "groupnameis", label = tl("group_column_question"))
+    updateSelectInput(session, "DataY", label = tl("y_axis_variable"))
+    
+    # Update textInput labels (we need to update the value to trigger label update via JavaScript)
+    # Note: Shiny doesn't have direct label update for textInput, so we use shinyjs
+    shinyjs::runjs(sprintf("$('#LabelY').parent().find('label').text('%s');", tl("y_axis_label")))
+    shinyjs::runjs(sprintf("$('#LabelX').parent().find('label').text('%s');", tl("x_axis_label")))
+    shinyjs::runjs(sprintf("$('#Filename').parent().find('label').text('%s');", tl("image_filename")))
+    
+    # Update checkboxInput labels
+    shinyjs::runjs(sprintf("$('#InpDat').siblings('span').text('%s');", tl("array_data_question")))
+    shinyjs::runjs(sprintf("$('#TitelKursiv').siblings('span').text('%s');", tl("title_italic")))
+    shinyjs::runjs(sprintf("$('#LegendenTitel').siblings('span').text('%s');", tl("legend_title_hide")))
+    shinyjs::runjs(sprintf("$('#BoxColor').siblings('span').text('%s');", tl("boxplot_color")))
+    shinyjs::runjs(sprintf("$('#InvertPoint').siblings('span').text('%s');", tl("invert_point_color")))
+    
+    # Update numericInput labels
+    shinyjs::runjs(sprintf("$('#colcut').parent().find('label').text('%s');", tl("column_before_numeric")))
+    shinyjs::runjs(sprintf("$('#yMin').parent().find('label').text('%s');", tl("y_axis_min")))
+    shinyjs::runjs(sprintf("$('#yMax').parent().find('label').text('%s');", tl("y_axis_max")))
+    shinyjs::runjs(sprintf("$('#ImageWidth').parent().find('label').text('%s');", tl("image_width")))
+    shinyjs::runjs(sprintf("$('#ImageHeight').parent().find('label').text('%s');", tl("image_height")))
+    shinyjs::runjs(sprintf("$('#ImageDPI').parent().find('label').text('%s');", tl("image_dpi")))
+    
+    # Update sliderInput label
+    shinyjs::runjs(sprintf("$('#PointSize').parent().find('label').first().text('%s');", tl("point_size")))
+    
+    # Update radioButtons label
+    shinyjs::runjs(sprintf("$('#ImageFiletype').parent().find('label.control-label').text('%s');", tl("image_format")))
+    
+    # Update downloadButton label
+    shinyjs::runjs(sprintf("$('#downloadPlot').text('%s');", tl("download_button")))
+    
+    # Update actionButton with icon - replace text but keep icon
+    shinyjs::runjs(sprintf("
+      $('#show_changelog').html('<i class=\"fa fa-circle-info\" role=\"presentation\" aria-label=\"circle-info icon\"></i> %s');
+    ", tl("changelog_button")))
+  })
+  
   # ---------------------------------------- Data Input -----------------------------------------------
 
 
@@ -39,12 +146,12 @@ server <- function(input, output, session) {
     
     # Falls Datei leer ist, gibt es kein Absturz
     validate(
-      need(nrow(TempDF) > 1, "Die Datei ist leer oder fehlerhaft.")
+      need(nrow(TempDF) > 1, tl("file_empty_error"))
     )
     
     if (input$InpDat) {
       # Transponiere und setze die erste Zeile als Spaltennamen
-      TempDF <- t(TempDF)
+      TempDF <- tl(TempDF)
     }
 
     TempDF <- FunctionColcutNA(TempDF)
@@ -92,39 +199,7 @@ server <- function(input, output, session) {
 
 
   # ---------------------------------------- Update Input -----------------------------------------------
-  observe({
-    req(DataTable())
-
-    # Aktualisiere die Auswahl für selected_groups
-    updateCheckboxGroupButtons(
-      session,
-      inputId = "selected_groups",
-      choices = unique(DataTable()[[input$groupnameis]]),
-      selected = unique(DataTable()[[input$groupnameis]]),
-      status = "primary",        # für Farbe (z.B. "primary" = blau)
-      checkIcon = list(
-        yes = icon("check")      # für sichtbaren Haken
-      )
-    )
-  })
-
-  observeEvent(input$selected_groups, {
-    req(DataTable())
-    # Filtere die Gruppen basierend auf den ausgewählten Gruppen
-    selected_items <- DataTable() %>% 
-      filter(.data[[input$groupnameis]] %in% input$selected_groups) %>%
-      pull(.data[[input$groupnameis]]) %>%
-      unique()
-      
-      # unique(DataTable()[[input$groupnameis]])[unique(DataTable()[[input$groupnameis]]) %in% input$selected_groups]
-
-    # Aktualisiere die Reihenfolge für group_order basierend auf den ausgewählten Gruppen
-    updateOrderInput(session,
-      inputId = "group_order",
-      items = selected_items,
-      item_class = "info"
-    )
-  })
+  # NOTE: Group selection and ordering are now handled in renderUI above for language switching
   
   
   # ---------------------------------------- Color Picker for Groups --------------------------------------------
@@ -233,7 +308,7 @@ server <- function(input, output, session) {
     req(SelectionGroup(), input$selected_groups, input$group_order)
     # Stelle sicher, dass SelectionGroup Daten hat
     validate(
-      need(nrow(SelectionGroup()) > 0, "ColorPicker wird geladen")
+      need(nrow(SelectionGroup()) > 0, tl("colorpicker_loading"))
     )
     p <- BoxplotInput()
     plot(p)
@@ -389,7 +464,7 @@ server <- function(input, output, session) {
     req(SelectionGroup(), input$selected_groups, input$group_order)
     # Stelle sicher, dass SelectionGroup Daten hat
     validate(
-      need(nrow(SelectionGroup()) > 0, "ColorPicker wird geladen")
+      need(nrow(SelectionGroup()) > 0, tl("colorpicker_loading"))
     )
     p <- BarplotInput()
     plot(p)
@@ -668,3 +743,4 @@ server <- function(input, output, session) {
     stopApp()
   })
 }
+

@@ -15,7 +15,8 @@ pakete <- c(
   "ggrepel",
   "ggbeeswarm",
   "RColorBrewer",
-  "sortable"
+  "sortable",
+  "jsonlite"
   )
 
 # Überprüfe, ob Pakete installiert sind, und installiere sie, falls nicht
@@ -64,6 +65,30 @@ sd_n <- function(x) {
 }
 
 print(sessionInfo())
+
+# ----------------------------------------------------------------------------------------------------- #
+# Initialize translator for multilingual support
+# ----------------------------------------------------------------------------------------------------- #
+library(jsonlite)
+
+# Load translations from JSON file
+translations_json <- fromJSON("translations.json")
+
+# Create a simple translator object
+translator <- list(
+  translations = translations_json,
+  current_language = "de",
+  set_translation_language = function(lang) {
+    if (lang %in% names(translations_json)) {
+      translator$current_language <<- lang
+    }
+  },
+  tl = function(key) {
+    translations_json[[translator$current_language]][[key]] %||% key
+  }
+)
+
+# ----------------------------------------------------------------------------------------------------- #
 
 # Lese die changelog.txt Datei ein
 changelog_path <- "changelog.txt"  # Falls die Datei auf einem Shared Drive liegt, Pfad anpassen
