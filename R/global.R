@@ -1,6 +1,7 @@
 # ----------------------------------------------------------------------------------------------------- #
 # Definiere eine Liste der benötigten Pakete
 pakete <- c(
+  "jsonlite",
   "shiny",
   "shinydashboard",
   "shinyjqui",
@@ -15,8 +16,7 @@ pakete <- c(
   "ggrepel",
   "ggbeeswarm",
   "RColorBrewer",
-  "sortable",
-  "jsonlite"
+  "sortable"
   )
 
 # Überprüfe, ob Pakete installiert sind, und installiere sie, falls nicht
@@ -69,10 +69,8 @@ print(sessionInfo())
 # ----------------------------------------------------------------------------------------------------- #
 # Initialize translator for multilingual support
 # ----------------------------------------------------------------------------------------------------- #
-library(jsonlite)
-
 # Load translations from JSON file
-translations_json <- fromJSON("translations.json")
+translations_json <- fromJSON("../inst/translations.json")
 
 # Create a simple translator object
 translator <- list(
@@ -89,18 +87,3 @@ translator <- list(
 )
 
 # ----------------------------------------------------------------------------------------------------- #
-
-# Lese die changelog.txt Datei ein
-changelog_path <- "changelog.txt"  # Falls die Datei auf einem Shared Drive liegt, Pfad anpassen
-aktuelle_version <- "Version unbekannt"
-
-if (file.exists(changelog_path)) {
-  changelog_content <- readLines(changelog_path, warn = FALSE)
-  
-  # Nehme die erste Zeile (erste Version)
-  aktuelle_version <- changelog_content[1]
-  
-  # Entferne das Datum für eine saubere Anzeige (optional)
-  aktuelle_version <- sub(" - .*", "", aktuelle_version)  # Entfernt alles nach " - "
-  aktuelle_version <- sub("<b>", "", aktuelle_version)
-}

@@ -14,7 +14,6 @@ server <- function(input, output, session) {
   }
   
   # Render dynamic text outputs for UI elements
-  output$app_title_header <- renderText({ tl("app_title") })
   output$download_options_header <- renderText({ tl("download_options") })
   output$data_table_title_out <- renderText({ tl("data_table_title") })
   output$data_table_info_1_out <- renderText({ tl("data_table_info_1") })
@@ -28,6 +27,29 @@ server <- function(input, output, session) {
   output$info_box_text_3_out <- renderText({ tl("info_box_text_3") })
   output$group_selection_title_out <- renderText({ tl("group_selection_title") })
   output$color_palette_title_out <- renderText({ tl("color_palette_title") })
+  
+  # Render version number (language-dependent)
+  output$version_number <- renderText({
+    changelog_path <- if(input$selected_language == "de") {
+      "changelog_de.txt"
+    } else if (input$selected_language == "en") {
+      "changelog_en.txt"
+    } else {
+      "changelog_de.txt"
+    }
+    
+    if (file.exists(changelog_path)) {
+      changelog_content <- readLines(changelog_path, warn = FALSE)
+      if (length(changelog_content) > 0) {
+        version <- changelog_content[1]
+        version <- sub(" - .*", "", version)  # Remove everything after " - "
+        version <- sub("<b>", "", version)
+        version <- sub("</b>", "", version)
+        return(version)
+      }
+    }
+    return("Version 1.6.0")  # Fallback
+  })
   
   # Dynamic UI for group selection checkbox
   output$group_selection_checkbox_ui <- renderUI({
@@ -62,6 +84,9 @@ server <- function(input, output, session) {
   
   # Update sidebar labels when language changes
   observeEvent(input$selected_language, {
+    # Update Main header
+    shinyjs::runjs(sprintf("$('.main-header .logo').text('%s');", tl("app_title")))
+
     # Update fileInput label
     shinyjs::runjs(sprintf("$('#DataTable-label').text('%s');", tl("upload_file")))
 
@@ -70,32 +95,32 @@ server <- function(input, output, session) {
     updateSelectInput(session, "groupnameis", label = tl("group_column_question"))
     updateSelectInput(session, "DataY", label = tl("y_axis_variable"))
     
-    # Update textInput labels (we need to update the value to trigger label update via JavaScript)
-    # Note: Shiny doesn't have direct label update for textInput, so we use shinyjs
-    shinyjs::runjs(sprintf("$('#LabelY').parent().find('label').text('%s');", tl("y_axis_label")))
-    shinyjs::runjs(sprintf("$('#LabelX').parent().find('label').text('%s');", tl("x_axis_label")))
-    shinyjs::runjs(sprintf("$('#Filename').parent().find('label').text('%s');", tl("image_filename")))
+    # Update textInput labels 
+    updateTextInput(session, "LabelY", label = tl("y_axis_label"))
+    updateTextInput(session, "LabelX", label = tl("x_axis_label"))
+    updateTextInput(session, "Filename", label = tl("image_filename"))
     
     # Update checkboxInput labels
-    shinyjs::runjs(sprintf("$('#InpDat').siblings('span').text('%s');", tl("array_data_question")))
-    shinyjs::runjs(sprintf("$('#TitelKursiv').siblings('span').text('%s');", tl("title_italic")))
-    shinyjs::runjs(sprintf("$('#LegendenTitel').siblings('span').text('%s');", tl("legend_title_hide")))
-    shinyjs::runjs(sprintf("$('#BoxColor').siblings('span').text('%s');", tl("boxplot_color")))
-    shinyjs::runjs(sprintf("$('#InvertPoint').siblings('span').text('%s');", tl("invert_point_color")))
     
+    updateCheckboxInput(session, "InpDat", label = tl("array_data_question"))
+    updateCheckboxInput(session, "TitelKursiv", label = tl("title_italic"))
+    updateCheckboxInput(session, "LegendenTitel", label = tl("legend_title_hide"))
+    updateCheckboxInput(session, "BoxColor", label = tl("boxplot_color"))
+    updateCheckboxInput(session, "InvertPoint", label = tl("invert_point_color"))
+
     # Update numericInput labels
-    shinyjs::runjs(sprintf("$('#colcut').parent().find('label').text('%s');", tl("column_before_numeric")))
-    shinyjs::runjs(sprintf("$('#yMin').parent().find('label').text('%s');", tl("y_axis_min")))
-    shinyjs::runjs(sprintf("$('#yMax').parent().find('label').text('%s');", tl("y_axis_max")))
-    shinyjs::runjs(sprintf("$('#ImageWidth').parent().find('label').text('%s');", tl("image_width")))
-    shinyjs::runjs(sprintf("$('#ImageHeight').parent().find('label').text('%s');", tl("image_height")))
-    shinyjs::runjs(sprintf("$('#ImageDPI').parent().find('label').text('%s');", tl("image_dpi")))
+    updateNumericInput(session, "colcut", label = tl("column_before_numeric"))
+    updateNumericInput(session, "yMin", label = tl("y_axis_min"))
+    updateNumericInput(session, "yMax", label = tl("y_axis_max"))
+    updateNumericInput(session, "ImageWidth", label = tl("image_width"))
+    updateNumericInput(session, "ImageHeight", label = tl("image_height"))
+    updateNumericInput(session, "ImageDPI", label = tl("image_dpi"))
     
     # Update sliderInput label
-    shinyjs::runjs(sprintf("$('#PointSize').parent().find('label').first().text('%s');", tl("point_size")))
+    updateSliderInput(session, "PointSize", label = tl("point_size"))
     
     # Update radioButtons label
-    shinyjs::runjs(sprintf("$('#ImageFiletype').parent().find('label.control-label').text('%s');", tl("image_format")))
+    updateRadioButtons(session, "ImageFiletype", label = tl("image_format"))
     
     # Update downloadButton label
     shinyjs::runjs(sprintf("$('#downloadPlot').text('%s');", tl("download_button")))
@@ -143,15 +168,17 @@ server <- function(input, output, session) {
       input$colcut
     ) # Sicherstellen, dass die Datei existiert
     TempDF <- read.xlsx(input$DataTable$datapath, colNames = FALSE) # Datei lesen
-    
-    # Falls Datei leer ist, gibt es kein Absturz
-    validate(
-      need(nrow(TempDF) > 1, tl("file_empty_error"))
+
+    shiny::validate(
+      need(!is.null(TempDF), tl("file_empty_error"))
     )
-    
+    shiny::validate(
+      need(ncol(TempDF) >= 1, tl("file_empty_error"))
+    )
+        
     if (input$InpDat) {
       # Transponiere und setze die erste Zeile als Spaltennamen
-      TempDF <- tl(TempDF)
+      TempDF <- t(TempDF)
     }
 
     TempDF <- FunctionColcutNA(TempDF)
@@ -164,6 +191,7 @@ server <- function(input, output, session) {
     req(DataTable()) # Warten, bis die Datei geladen ist
     req(input$colcut)
 
+    
     colcut <- input$colcut %>% abs()
     if (colcut > ncol(DataTable())) {
       colcut <- ncol(DataTable())
@@ -184,7 +212,7 @@ server <- function(input, output, session) {
 
   # Render die Tabelle nur, wenn DataTable verfügbar ist
   output$data <- renderDT({
-    req(DataTable()) # Warten, bis die Datei geladen ist
+    # req(DataTable()) # Warten, bis die Datei geladen ist
 
     max_row <- ifelse(nrow(DataTable()) > 10, 10, nrow(DataTable()))
     max_col <- ifelse(ncol(DataTable()) > 10, 10, ncol(DataTable()))
@@ -307,7 +335,7 @@ server <- function(input, output, session) {
   output$BoxplotsWithDots <- renderPlot({
     req(SelectionGroup(), input$selected_groups, input$group_order)
     # Stelle sicher, dass SelectionGroup Daten hat
-    validate(
+    shiny::validate(
       need(nrow(SelectionGroup()) > 0, tl("colorpicker_loading"))
     )
     p <- BoxplotInput()
@@ -463,7 +491,7 @@ server <- function(input, output, session) {
   output$BarplotsWithDots <- renderPlot({
     req(SelectionGroup(), input$selected_groups, input$group_order)
     # Stelle sicher, dass SelectionGroup Daten hat
-    validate(
+    shiny::validate(
       need(nrow(SelectionGroup()) > 0, tl("colorpicker_loading"))
     )
     p <- BarplotInput()
@@ -714,25 +742,44 @@ server <- function(input, output, session) {
   # ---------------------------------------- Changelog -----------------------------------------------------
   
   observeEvent(input$show_changelog, {
-    changelog_path <- "changelog.txt"
+    # Lade sprachabhängigen Changelog
+    changelog_path <- if(input$selected_language == "de") {
+      "../inst/changelog_de.txt"
+    } else if (input$selected_language == "en") {
+      "../inst/changelog_en.txt"
+    } else {
+      "../inst/changelog_en.txt"  # Fallback auf English
+    }
     
     if (!file.exists(changelog_path)) {
-      changelog_html <- "<b>Kein Changelog gefunden.</b>"
+      changelog_html <- if(input$selected_language == "de") {
+        "<b>Kein Changelog gefunden.</b>"
+      } else {
+        "<b>No changelog found.</b>"
+      }
     } else {
       changelog_content <- readLines(changelog_path, warn = FALSE)
       
       if (length(changelog_content) == 0) {
-        changelog_html <- "<b>Changelog ist leer.</b>"
+        changelog_html <- if(input$selected_language == "de") {
+          "<b>Changelog ist leer.</b>"
+        } else {
+          "<b>Changelog is empty.</b>"
+        }
       } else {
         changelog_html <- paste(changelog_content, collapse = "<br>")
       }
     }
     
+    # Sprachabhängiger Titel und Button
+    title_text <- if(input$selected_language == "de") "Updateverlauf" else "Update History"
+    button_text <- if(input$selected_language == "de") "Schließen" else "Close"
+    
     showModal(modalDialog(
-      title = strong("Updateverlauf"),  # Titel direkt fett machen,
+      title = strong(title_text),
       HTML(changelog_html),
       easyClose = TRUE,
-      footer = modalButton("Schließen")
+      footer = modalButton(button_text)
     ))
   })
   

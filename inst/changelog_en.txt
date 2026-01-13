@@ -1,0 +1,48 @@
+<b>Version 1.6.0 - 2025-12-08:</b>
+- New: Actual image size is displayed. Can be adjusted via download options
+- New: Color picker is now interactive, no longer a table
+- New: Legend titles can be hidden
+- New: Box plot colors can be activated when group and point colors are the same!
+- New: Point color can be inverted (color as fill or as border).
+
+<b>Version 1.5.2 - 2025-10-27:</b>
+- New: Images can now be saved as .svg and thus imported correctly into Inkscape.
+
+<b>Version 1.5.1 - 2025-10-20:</b>
+- Bug fix: Arial font is now displayed correctly in the PDF.
+
+<b>Version 1.5.0 - 2025-04-30:</b>
+- Selection and sorting are no longer in the side panel
+- Selection between bar plot and box plot is now in the main window
+
+<b>Version 1.4.1 - 2025-04-08:</b>
+- Axis labels are now black instead of gray
+
+<b>Version 1.4.0 - 2025-01-30:</b>
+- Session info can be displayed in a separate tab in the app
+- Change log added, can be displayed as a pop-up via button
+- Version number updated, displayed in app
+
+<b>Version 1.3.1 - 2025-01-29:</b>
+- Typo corrections in sideboard
+
+<b>Version 1.3.0 - 2025-01-17:</b>
+- Groups are now sorted vertically instead of horizontally
+- Image captions can be displayed in italics
+
+<b>Version 1.2.0 - 2025-01-14:</b>
+- Session info with packages is displayed in the log files
+
+<b>Version 1.1.1 - 2025-01-09:</b>
+- Absolute numbers are now used for number input and the maximum number of columns.
+  Prevents app crashes.
+
+<b>Version 1.1.0 - 2024-10-31:</b>
+- Table for group color is now displayed and used correctly.
+- Improved preview of the imported table.
+
+<b>Version 1.0.1 - 2024-10-29:</b>
+- Improved performance, prevention of app crash when input is deleted
+
+<b>Version 1.0.0 - 2024-10-21:</b>
+- First draft for Shiny app with bar and box plots

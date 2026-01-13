@@ -1,11 +1,11 @@
-dashboardPage(
+ui <- dashboardPage(
   # ------------------- Header -------------------------------------------------------------------------#
   dashboardHeader(
-    title = textOutput("app_title_header", inline = TRUE),
+    title = "Bar-/Boxplot",   # Platzhalter
     tags$li(
       class = "dropdown",
       style = "padding: 15px; color: white;",
-      aktuelle_version # Zeigt die neueste Version aus der Datei an
+      textOutput("version_number", inline = TRUE)
     ),
     tags$li(
       class = "dropdown",
@@ -119,7 +119,6 @@ dashboardPage(
       # tab für die Tabelle
       tabItem(
         tabName = "data",
-        # verbatimTextOutput("TextTableOutput"),
         box(
           title = textOutput("data_table_title_out", inline = TRUE),
           status = "info",
