@@ -1,4 +1,27 @@
-server <- function(input, output, session) {
+#' The application server-side
+#'
+#' @param input,output,session Internal parameters for {shiny}.
+#'     DO NOT REMOVE.
+#' @import shiny
+#' @import shinydashboard
+#' @import sortable
+#' @import ggplot2
+#' @import dplyr
+#' @importFrom shinyjs runjs
+#' @importFrom shinyWidgets checkboxGroupButtons updateCheckboxGroupButtons
+#' @importFrom shinyjqui orderInput
+#' @importFrom colourpicker colourInput
+#' @importFrom DT renderDT datatable DTOutput
+#' @importFrom data.table data.table
+#' @importFrom ggbeeswarm geom_beeswarm
+#' @importFrom purrr map
+#' @importFrom stringr str_remove
+#' @noRd
+app_server <- function(input, output, session) {
+  # Source the original server logic
+  # Initialize translator
+  translator <- initialize_translator()
+  
   # ---------------------------------------- Language Switching -----------------------------------------------
   
   # Reactive translator that updates when language changes
@@ -10,6 +33,9 @@ server <- function(input, output, session) {
   
   # Helper function to translate
   tl <- function(key) {
+    translations_json <- jsonlite::fromJSON(
+      system.file("translations.json", package = "RSPrismBB")
+    )
     translations_json[[input$selected_language %||% "de"]][[key]] %||% key
   }
   
@@ -31,30 +57,30 @@ server <- function(input, output, session) {
   # Render version number (language-dependent)
   output$version_number <- renderText({
     changelog_path <- if(input$selected_language == "de") {
-      "changelog_de.txt"
+      system.file("changelog_de.txt", package = "RSPrismBB")
     } else if (input$selected_language == "en") {
-      "changelog_en.txt"
+      system.file("changelog_en.txt", package = "RSPrismBB")
     } else {
-      "changelog_de.txt"
+      system.file("changelog_de.txt", package = "RSPrismBB")
     }
     
     if (file.exists(changelog_path)) {
       changelog_content <- readLines(changelog_path, warn = FALSE)
       if (length(changelog_content) > 0) {
         version <- changelog_content[1]
-        version <- sub(" - .*", "", version)  # Remove everything after " - "
+        version <- sub(" - .*", "", version)
         version <- sub("<b>", "", version)
         version <- sub("</b>", "", version)
         return(version)
       }
     }
-    return("Version 1.6.0")  # Fallback
+    return("Version 1.6.0")
   })
   
   # Dynamic UI for group selection checkbox
   output$group_selection_checkbox_ui <- renderUI({
     req(DataTable())
-    checkboxGroupButtons(
+    shinyWidgets::checkboxGroupButtons(
       inputId = "selected_groups",
       label = tl("group_selection_label"),
       choices = unique(DataTable()[[input$groupnameis]]),
@@ -82,10 +108,28 @@ server <- function(input, output, session) {
     )
   })
   
-  # Update sidebar labels when language changes
+  # Update sidebar labels
   observeEvent(input$selected_language, {
-    # Update Main header
-    shinyjs::runjs(sprintf("$('.main-header .logo').text('%s');", tl("app_title")))
+    # Update Main header - multiline
+    title_parts <- strsplit(tl("app_title"), ": ")[[1]]
+    if (length(title_parts) == 2) {
+      header_html <- sprintf(
+        '<div style="text-align: center; line-height: 1.2; padding: 5px 0;"><div>%s</div><div style="font-size: 12px;">%s</div></div>',
+        title_parts[1], title_parts[2]
+      )
+    } else {
+      header_html <- tl("app_title")
+    }
+    shinyjs::runjs(sprintf("$('.main-header .logo').html('%s');", header_html))
+
+    # Update Sidebar Menu Items 
+    shinyjs::runjs(sprintf("$('a[data-value=\"data\"]').find('span').last().text('%s');", tl("data_table")))
+    shinyjs::runjs(sprintf("$('a[data-value=\"Plots_erstellen\"]').find('span').last().text('%s');", tl("plots_create")))
+    shinyjs::runjs(sprintf("$('a[data-value=\"SessionInfo\"]').find('span').last().text('%s');", tl("session_info")))
+    
+    # Update expandable menu headers
+    shinyjs::runjs(sprintf("$('.treeview:has(a[data-value=\"data\"]) > a > span:first').text('%s');", tl("data_input")))
+    shinyjs::runjs(sprintf("$('.treeview:has(a[data-value=\"Plots_erstellen\"]) > a > span:first').text('%s');", tl("plots")))
 
     # Update fileInput label
     shinyjs::runjs(sprintf("$('#DataTable-label').text('%s');", tl("upload_file")))
@@ -101,7 +145,6 @@ server <- function(input, output, session) {
     updateTextInput(session, "Filename", label = tl("image_filename"))
     
     # Update checkboxInput labels
-    
     updateCheckboxInput(session, "InpDat", label = tl("array_data_question"))
     updateCheckboxInput(session, "TitelKursiv", label = tl("title_italic"))
     updateCheckboxInput(session, "LegendenTitel", label = tl("legend_title_hide"))
@@ -125,30 +168,26 @@ server <- function(input, output, session) {
     # Update downloadButton label
     shinyjs::runjs(sprintf("$('#downloadPlot').text('%s');", tl("download_button")))
     
-    # Update actionButton with icon - replace text but keep icon
+    # Update actionButton with icon
     shinyjs::runjs(sprintf("
       $('#show_changelog').html('<i class=\"fa fa-circle-info\" role=\"presentation\" aria-label=\"circle-info icon\"></i> %s');
     ", tl("changelog_button")))
   })
   
   # ---------------------------------------- Data Input -----------------------------------------------
-
-
+  
+  # Function to handle colcut and NA values
   FunctionColcutNA <- function(df) {
     TempDF <- df
 
     TempDF[1, ] <- sapply(TempDF[1, ], \(x) ifelse(is.na(x), "NA", x))
-    colnames(TempDF) <- make.unique(as.character(TempDF[1, ])) # Erste Zeile als Spaltennamen
-    TempDF <- TempDF[-1, ] # Entferne die erste Zeile aus den Daten
-
-    # Konvertiere sicherheitshalber zu einem DataFrame, falls das noch nicht geschehen ist
+    colnames(TempDF) <- make.unique(as.character(TempDF[1, ]))
+    TempDF <- TempDF[-1, ]
     TempDF <- as.data.frame(TempDF)
 
     req(input$colcut)
     colcut <- input$colcut %>% abs()
 
-
-    # Konvertiere die relevanten Spalten zu numerischen Werten
     if (colcut + 1 == ncol(TempDF)) {
       TempDF[, (colcut + 1):ncol(TempDF)] <-
         lapply(TempDF[, (colcut + 1):ncol(TempDF)], as.numeric) %>% unlist()
@@ -161,13 +200,10 @@ server <- function(input, output, session) {
     return(TempDF)
   }
 
-  # Verwende eine reaktive Funktion, um die hochgeladene Datei einzulesen
+  # Reactive expression to read and process the uploaded data
   DataTable <- reactive({
-    req(
-      input$DataTable,
-      input$colcut
-    ) # Sicherstellen, dass die Datei existiert
-    TempDF <- read.xlsx(input$DataTable$datapath, colNames = FALSE) # Datei lesen
+    req(input$DataTable, input$colcut)
+    TempDF <- openxlsx::read.xlsx(input$DataTable$datapath, colNames = FALSE)
 
     shiny::validate(
       need(!is.null(TempDF), tl("file_empty_error"))
@@ -177,20 +213,15 @@ server <- function(input, output, session) {
     )
         
     if (input$InpDat) {
-      # Transponiere und setze die erste Zeile als Spaltennamen
       TempDF <- t(TempDF)
     }
 
     TempDF <- FunctionColcutNA(TempDF)
-
     return(TempDF)
   })
 
-  # Update des selectInput basierend auf den Spaltennamen von DataTable
   observe({
-    req(DataTable()) # Warten, bis die Datei geladen ist
-    req(input$colcut)
-
+    req(DataTable(), input$colcut)
     
     colcut <- input$colcut %>% abs()
     if (colcut > ncol(DataTable())) {
@@ -201,58 +232,37 @@ server <- function(input, output, session) {
     Colname_before_colcut <- All_colname[1:colcut]
     Colname_after_colcut <- All_colname[(colcut + 1):length(All_colname)]
 
-    # Aktualisiere die Auswahl für dotid
     updateSelectizeInput(session, "dotid", choices = Colname_before_colcut, server = TRUE)
-    # Aktualisiere die Auswahl für DataX
     updateSelectizeInput(session, "groupnameis", choices = Colname_before_colcut, server = TRUE)
-    # Aktualisiere die Auswahl für DataY
     updateSelectizeInput(session, "DataY", choices = Colname_after_colcut, server = TRUE)
   })
 
-
-  # Render die Tabelle nur, wenn DataTable verfügbar ist
-  output$data <- renderDT({
-    # req(DataTable()) # Warten, bis die Datei geladen ist
-
+  output$data <- DT::renderDT({
     max_row <- ifelse(nrow(DataTable()) > 10, 10, nrow(DataTable()))
     max_col <- ifelse(ncol(DataTable()) > 10, 10, ncol(DataTable()))
 
-    ## round numeric data
-    TempDF <- data.table(DataTable()[1:max_row, 1:max_col]) %>%
+    TempDF <- data.table::data.table(DataTable()[1:max_row, 1:max_col]) %>%
       mutate_if(is.numeric, ~ round(., 4))
 
-    datatable(TempDF, options = list(server = TRUE, pageLength = 25, scrollX = TRUE, dom = "t"))
+    DT::datatable(TempDF, options = list(server = TRUE, pageLength = 25, scrollX = TRUE, dom = "t"))
   })
 
-
-
-  # ---------------------------------------- Update Input -----------------------------------------------
-  # NOTE: Group selection and ordering are now handled in renderUI above for language switching
-  
-  
   # ---------------------------------------- Color Picker for Groups --------------------------------------------
-  # Erstelle eine reaktive Tabelle für die Gruppen
   SelectionGroup <- reactiveVal()
-  
-  # Speichere die Farbzuordnungen persistent
   ColorStorage <- reactiveVal(data.frame(GroupID = character(), Color = character(), stringsAsFactors = FALSE))
   
-  # Dynamisch Color Picker generieren basierend auf group_order
   output$ColorPickerUI <- renderUI({
     req(DataTable(), input$selected_groups, input$group_order, input$dotid)
     
-    # Hole gespeicherte Farben oder erstelle Defaults
-    # WICHTIG: isolate() verhindert Re-Rendering wenn sich Farben ändern
     stored_colors <- isolate(ColorStorage())
     all_groups <- sort(unique(DataTable()[[input$dotid]]))
     
-    # Prüfe ob die gespeicherten Farben zu den aktuellen Gruppen passen
     stored_groups <- stored_colors$GroupID
     groups_match <- length(stored_groups) == length(all_groups) && all(all_groups %in% stored_groups)
     
-    # Wenn noch keine Farben gespeichert sind ODER die Gruppen nicht passen, erstelle neue Defaults
     if (nrow(stored_colors) == 0 || !groups_match) {
       colourcount <- length(all_groups)
+      getPalette <- get_color_palette()
       default_colors <- getPalette(colourcount)
       stored_colors <- data.frame(
         GroupID = all_groups,
@@ -262,25 +272,20 @@ server <- function(input, output, session) {
       isolate(ColorStorage(stored_colors))
     }
     
-    # Bestimme welche Gruppen angezeigt werden sollen
     if (input$dotid == input$groupnameis) {
-      # Verwende die Reihenfolge von group_order (nur ausgewählte Gruppen)
       groups <- input$group_order
     } else {
-      # Zeige alle unique Werte von dotid (sortiert)
       groups <- all_groups
     }
     
-    # Erstelle Color Picker nur für die ausgewählten Gruppen in der richtigen Reihenfolge
-    color_pickers <- map(seq_along(groups), function(i) {
+    color_pickers <- purrr::map(seq_along(groups), function(i) {
       group <- groups[i]
-      # Finde die gespeicherte Farbe für diese Gruppe
       color_idx <- which(stored_colors$GroupID == group)
       current_color <- if (length(color_idx) > 0) stored_colors$Color[color_idx] else "#FF0000"
       
       column(
         width = 3,
-        colourInput(
+        colourpicker::colourInput(
           inputId = paste0("color_", make.names(group)),
           label = as.character(group),
           value = current_color,
@@ -289,30 +294,25 @@ server <- function(input, output, session) {
         )
       )
     })
-    # Zeige die Color Picker in einem Grid an
     fluidRow(color_pickers)
   })
   
-  # Sammle alle ausgewählten Farben (für alle Gruppen, nicht nur selected)
   observe({
     req(DataTable())
     
     all_groups <- sort(unique(DataTable()[[input$dotid]]))
     stored_colors <- ColorStorage()
     
-    # Warte bis alle Inputs vorhanden sind
     all_inputs_exist <- all(sapply(all_groups, function(g) {
       !is.null(input[[paste0("color_", make.names(g))]])
     }))
     
     if (all_inputs_exist) {
-      # Aktualisiere die Farben für alle Gruppen
       colors <- sapply(all_groups, function(g) {
         color_input <- input[[paste0("color_", make.names(g))]]
         if (!is.null(color_input)) {
           return(color_input)
         } else {
-          # Falls kein Input vorhanden, behalte die gespeicherte Farbe
           idx <- which(stored_colors$GroupID == g)
           if (length(idx) > 0) return(stored_colors$Color[idx])
           return("#FF0000")
@@ -331,10 +331,8 @@ server <- function(input, output, session) {
   })
   
   # ---------------------------------------- BoxplotsWithDots-----------------------------------------------
-  # Render den Plot
   output$BoxplotsWithDots <- renderPlot({
     req(SelectionGroup(), input$selected_groups, input$group_order)
-    # Stelle sicher, dass SelectionGroup Daten hat
     shiny::validate(
       need(nrow(SelectionGroup()) > 0, tl("colorpicker_loading"))
     )
@@ -364,35 +362,24 @@ server <- function(input, output, session) {
   res = 96
   )
   
-  # plot erstellen
   BoxplotInput <- reactive({
-    req(
-      input$selected_groups,
-      input$group_order,
-      SelectionGroup()
-    ) # Sicherstellen, dass die Tabelle vorhanden ist
+    req(input$selected_groups, input$group_order, SelectionGroup())
     
-    # daten Filtern, welche im Sidepanel gewählt werden
     filtered_data <- DataTable() %>%
       filter(.data[[input$groupnameis]] %in% input$selected_groups)
     
-    # sortiere die Daten wie im Sidepanel + Faktorisiere
     ordered_data <- filtered_data %>%
       mutate(!!input$groupnameis := factor(.data[[input$groupnameis]], levels = input$group_order))
     
-    # Setze y_min and y_max mit defaults
     y_min <- ifelse(is.numeric(input$yMin) & !is.na(input$yMin), input$yMin, NA)
     y_max <- ifelse(is.numeric(input$yMax) & !is.na(input$yMax), input$yMax, NA)
     
-    # Schauen ob y_min auch kleiner ist ist y_max, ansonsten tauschen
     if (!is.na(y_min) & !is.na(y_max) & y_min > y_max) {
       temp <- y_min
       y_min <- y_max
       y_max <- temp
     }
     
-    
-    # erste plot mit ggplot
     p <- ordered_data %>%
       ggplot(aes(x = .data[[input$groupnameis]], y = .data[[input$DataY]])) +
       {
@@ -404,7 +391,7 @@ server <- function(input, output, session) {
       } +
       {
         if (input$InvertPoint) {
-          geom_beeswarm(
+          ggbeeswarm::geom_beeswarm(
             data = ordered_data,
             aes(
               x = .data[[input$groupnameis]],
@@ -418,7 +405,7 @@ server <- function(input, output, session) {
             stroke = input$PointSize / 3
           )
         } else {
-          geom_beeswarm(
+          ggbeeswarm::geom_beeswarm(
             data = ordered_data,
             aes(
               x = .data[[input$groupnameis]],
@@ -441,7 +428,6 @@ server <- function(input, output, session) {
       ) +
       {
         if (input$InvertPoint && input$BoxColor && input$dotid == input$groupnameis) {
-          # Beide aktiviert
           list(
             scale_colour_manual(
               name = input$dotid,
@@ -453,13 +439,11 @@ server <- function(input, output, session) {
             )
           )
         } else if (input$InvertPoint) {
-          # Nur InvertPoint
           scale_colour_manual(
             name = input$dotid,
             values = setNames(SelectionGroup()[["Color"]], SelectionGroup()[["GroupID"]])
           )
         } else {
-          # Normal
           scale_fill_manual(
             name = input$dotid,
             values = setNames(SelectionGroup()[["Color"]], SelectionGroup()[["GroupID"]])
@@ -486,11 +470,10 @@ server <- function(input, output, session) {
       )
     return(p)
   })
+  
   # ---------------------------------------- BarplotsWithDots ----------------------------------------------
-  # Render den Plot
   output$BarplotsWithDots <- renderPlot({
     req(SelectionGroup(), input$selected_groups, input$group_order)
-    # Stelle sicher, dass SelectionGroup Daten hat
     shiny::validate(
       need(nrow(SelectionGroup()) > 0, tl("colorpicker_loading"))
     )
@@ -520,20 +503,12 @@ server <- function(input, output, session) {
   res = 96
   )
   
-  # plot erstellen
   BarplotInput <- reactive({
-    req(
-      input$selected_groups,
-      input$group_order,
-      # SelectionGroupBarplot(),
-      SelectionGroup()
-    ) # Sicherstellen, dass die Tabelle vorhanden ist
+    req(input$selected_groups, input$group_order, SelectionGroup())
     
-    # daten Filtern, welche im Sidepanel gewählt werden
     filtered_data <- DataTable() %>%
       filter(.data[[input$groupnameis]] %in% input$selected_groups)
     
-    # sortiere die Daten wie im Sidepanel + Faktorisiere
     ordered_data <- filtered_data %>%
       mutate(!!input$groupnameis := factor(.data[[input$groupnameis]], levels = input$group_order))
     
@@ -550,18 +525,15 @@ server <- function(input, output, session) {
       as.data.frame() %>%
       mutate(!!input$groupnameis := factor(.data[[input$groupnameis]], levels = input$group_order))
     
-    # Setze y_min and y_max mit defaults
     y_min <- ifelse(is.numeric(input$yMin) & !is.na(input$yMin), input$yMin, NA)
     y_max <- ifelse(is.numeric(input$yMax) & !is.na(input$yMax), input$yMax, NA)
     
-    # Schauen ob y_min auch kleiner ist ist y_max, ansonsten tauschen
     if (!is.na(y_min) & !is.na(y_max) & y_min > y_max) {
       temp <- y_min
       y_min <- y_max
       y_max <- temp
     }
     
-    # erste plot mit ggplot
     p <- Statistics %>%
       ggplot() +
       geom_errorbar(
@@ -582,7 +554,7 @@ server <- function(input, output, session) {
       ) +
       {
         if (input$InvertPoint) {
-          geom_beeswarm(
+          ggbeeswarm::geom_beeswarm(
             data = ordered_data,
             aes(
               x = .data[[input$groupnameis]],
@@ -596,7 +568,7 @@ server <- function(input, output, session) {
             stroke = input$PointSize / 3
           )
         } else {
-          geom_beeswarm(
+          ggbeeswarm::geom_beeswarm(
             data = ordered_data,
             aes(
               x = .data[[input$groupnameis]],
@@ -619,13 +591,11 @@ server <- function(input, output, session) {
       ) +
       {
         if (input$InvertPoint) {
-          # Nur InvertPoint
           scale_colour_manual(
             name = input$dotid,
             values = setNames(SelectionGroup()[["Color"]], SelectionGroup()[["GroupID"]])
           )
         } else {
-          # Normal
           scale_fill_manual(
             name = input$dotid,
             values = setNames(SelectionGroup()[["Color"]], SelectionGroup()[["GroupID"]])
@@ -653,35 +623,28 @@ server <- function(input, output, session) {
     return(p)
   })
   
-  # ---------------------------------------- Erklärung und Text -----------------------------------------------------
-
+  # ---------------------------------------- Session Info -----------------------------------------------------
   output$sessionInfo <- renderPrint({
-    sessionInfo() # Gibt die Session-Info direkt als Ausgabe zurück
+    sessionInfo()
   })
+  
   # ---------------------------------------- Download -----------------------------------------------------
-  # Für Download Button
   output$downloadPlot <- downloadHandler(
-    # Dateiname erstellen
     filename = function() {
-      # Stelle sicher, dass ein Dateiname eingegeben wurde
       if (is.null(input$Filename) || input$Filename == "") {
         return(paste0("plot.", input$ImageFiletype))
       }
       paste0(input$Filename, ".", input$ImageFiletype)
     },
-    # plot speichern
     content = function(file) {
-      # Überprüfe den aktiven Tab
       selected_plot <- if (input$plot_tabs == "Boxplot") {
         BoxplotInput()
       } else if (input$plot_tabs == "Barplot") {
         BarplotInput()
       }
       
-
       if (input$ImageFiletype == "png") {
-        # Speichern als PNG
-        ggsave(
+        ggplot2::ggsave(
           filename = file,
           plot = selected_plot,
           device = "png",
@@ -691,25 +654,21 @@ server <- function(input, output, session) {
           dpi = input$ImageDPI
         )
       } else if (input$ImageFiletype == "pdf") {
-        # Speichern als PDF
-        ggsave(
+        ggplot2::ggsave(
           filename = file,
           plot = selected_plot,
-          device = cairo_pdf,
+          device = grDevices::cairo_pdf,
           width = as.numeric(input$ImageWidth),
           height = as.numeric(input$ImageHeight),
           units = "cm",
           dpi = input$ImageDPI
         )
       } else if (input$ImageFiletype == "svg") {
-        # Speichern als SVG
-        
         TempFile <- tempfile(fileext = ".svg")
         
-        ## try saving with ggsave otherwise use svg()
         tryCatch( 
           {
-            ggsave(
+            ggplot2::ggsave(
               filename = TempFile,
               plot = selected_plot,
               device = "svg",
@@ -720,35 +679,33 @@ server <- function(input, output, session) {
             )
           },
           error = function(e) {
-            svg(
+            grDevices::svg(
               filename = TempFile,
               width = as.numeric(input$ImageWidth) / 2.54,
               height = as.numeric(input$ImageHeight) / 2.54
             )
             print(selected_plot)
-            dev.off()
+            grDevices::dev.off()
             showNotification("SVG wurde mit der base svg-Funktion gespeichert.", type = "warning")
           }
         )
         
         x <- readLines(TempFile)
-        x <- str_remove(x, " textLength='[0-9.]+px'")
-        x <- str_remove(x, " lengthAdjust='[a-zA-Z]+'")
+        x <- stringr::str_remove(x, " textLength='[0-9.]+px'")
+        x <- stringr::str_remove(x, " lengthAdjust='[a-zA-Z]+'")
         writeLines(x, con = file)
       }
     }
   )
 
   # ---------------------------------------- Changelog -----------------------------------------------------
-  
   observeEvent(input$show_changelog, {
-    # Lade sprachabhängigen Changelog
     changelog_path <- if(input$selected_language == "de") {
-      "../inst/changelog_de.txt"
+      system.file("changelog_de.txt", package = "RSPrismBB")
     } else if (input$selected_language == "en") {
-      "../inst/changelog_en.txt"
+      system.file("changelog_en.txt", package = "RSPrismBB")
     } else {
-      "../inst/changelog_en.txt"  # Fallback auf English
+      system.file("changelog_en.txt", package = "RSPrismBB")
     }
     
     if (!file.exists(changelog_path)) {
@@ -771,7 +728,6 @@ server <- function(input, output, session) {
       }
     }
     
-    # Sprachabhängiger Titel und Button
     title_text <- if(input$selected_language == "de") "Updateverlauf" else "Update History"
     button_text <- if(input$selected_language == "de") "Schließen" else "Close"
     
@@ -783,11 +739,7 @@ server <- function(input, output, session) {
     ))
   })
   
-  
-  # ensure that it will stop the websocket server started by shiny::runApp() and the underlying R process when the
-  # browser window is closed
   session$onSessionEnded(function() {
     stopApp()
   })
 }
-

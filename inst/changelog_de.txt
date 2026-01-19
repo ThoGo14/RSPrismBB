@@ -1,3 +1,6 @@
+<b>Version 1.6.1 - 2025-12-08:</b>
+- Neu: Texte können in Deutsch oder Englisch angezeigt werden
+
 <b>Version 1.6.0 - 2025-12-08:</b>
 - Neu: Tatsächliche Bildgröße wird angezeigt. Kann über Download Optionen angepasst werden
 - Neu: Color Picker ist nun interaktiv, nicht mehr als Tabelle

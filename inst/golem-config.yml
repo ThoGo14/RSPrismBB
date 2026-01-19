@@ -1,0 +1,11 @@
+default:
+  golem_name: RSPrismBB
+  golem_version: 1.6.1
+  app_prod: no
+  max_upload_size_mb: 100
+
+production:
+  app_prod: yes
+  
+dev:
+  golem_wd: !expr golem::pkg_path()

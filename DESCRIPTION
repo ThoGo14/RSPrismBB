@@ -1,0 +1,47 @@
+Package: RSPrismBB
+Title: R Shiny Application for creating Bar- and Boxplots
+Version: 1.6.1
+Authors@R: 
+    person("Thomas", "Goj", , "thomas.goj@med.uni-tuebingen.de", role = c("aut", "cre"))
+Description: A user-friendly Shiny application for creating standardized, 
+    bar- and box plots with customizable aesthetics and multilingual support. 
+    Enables researchers without R programming skills to create consistent, 
+    high-quality visualizations from Excel data files.
+License: GPL-3
+Imports: 
+    colourpicker,
+    data.table,
+    DT,
+    ggbeeswarm,
+    ggplot2,
+    ggrepel,
+    golem (>= 0.4.1),
+    jsonlite,
+    openxlsx,
+    RColorBrewer,
+    scales,
+    shiny,
+    shinydashboard,
+    shinyjs,
+    shinyjqui,
+    shinyWidgets,
+    sortable,
+    config (>= 0.3.1),
+    dplyr,
+    tidyr,
+    stringr,
+    purrr
+Suggests:
+    knitr,
+    rmarkdown,
+    spelling,
+    svglite,
+    testthat (>= 3.0.0)
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 7.1.1
+URL: https://github.com/ThoGo14/RSPrismBB
+BugReports: https://github.com/ThoGo14/RSPrismBB/issues
+Language: en-US
+Config/testthat/edition: 3
+VignetteBuilder: knitr

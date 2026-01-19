@@ -1,8 +1,8 @@
 {
   "de": {
-    "app_title": "Bar- und Boxplot",
-    "data_input": "Data Input",
-    "data_table": "Data Table",
+    "app_title": "RSPrism: Bar- und Boxplot",
+    "data_input": "Dateneingabe",
+    "data_table": "Datentabelle",
     "plots": "Plots",
     "plots_create": "Plots erstellen",
     "session_info": "Session Info",
@@ -52,7 +52,7 @@
     "dateiname": "Dateiname"
   },
   "en": {
-    "app_title": "Bar- and Boxplot",
+    "app_title": "RSPrism: Bar- and Boxplot",
     "data_input": "Data Input",
     "data_table": "Data Table",
     "plots": "Plots",
