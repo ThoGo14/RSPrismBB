@@ -68,7 +68,7 @@ app_ui <- function(request) {
             startExpanded = TRUE
           ),
 
-          # Tab für Plots
+          # Tab for Plots
           menuItem(
             text = "Plots",
             expandedName = "PlotsExpand",
@@ -85,9 +85,9 @@ app_ui <- function(request) {
             textInput("LabelX", label = "X-Achsen Beschriftung", value = NULL),
             checkboxInput("TitelKursiv", label = "Titel kursiv?", value = FALSE),
             checkboxInput("LegendenTitel", label = "Legendentitel ausblenden?", value = FALSE),
-            checkboxInput("BoxColor", label = "Boxplot einfärben?", value = FALSE),
+            checkboxInput("BoxColor", label = "Boxplot einf\u00e4rben?", value = FALSE),
             checkboxInput("InvertPoint", label = "Punktfarbe invertieren?", value = FALSE),
-            sliderInput("PointSize", label = "Punktgröße", min = 1, max = 10, step = 0.5, value = 2),
+            sliderInput("PointSize", label = "Punktgr\u00f6\u00dfe", min = 1, max = 10, step = 0.5, value = 2),
             fluidRow(
               style = "margin-left: 0px; margin-right: 0px;",
               column(6, numericInput("yMin", "Y-Achse Min", value = NA, min = 0)),
@@ -99,8 +99,8 @@ app_ui <- function(request) {
             h3(textOutput("download_options_header", inline = TRUE), style = "margin-left: 15px; margin-right: 5px;"),
             textInput("Filename", label = "Bilddateiname", placeholder = "Dateiname"),
             numericInput("ImageWidth", label = "Bildbreite (cm)", value = 20),
-            numericInput("ImageHeight", label = "Bildhöhe (cm)", value = 20),
-            numericInput("ImageDPI", label = "Bildauflösung (DPI)", value = 200),
+            numericInput("ImageHeight", label = "Bildh\u00f6he (cm)", value = 20),
+            numericInput("ImageDPI", label = "Bildaufl\u00f6sung (DPI)", value = 200),
             radioButtons(
               "ImageFiletype",
               label = "Bildformat",

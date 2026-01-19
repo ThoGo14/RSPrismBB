@@ -12,10 +12,12 @@
 #' @importFrom shinyjqui orderInput
 #' @importFrom colourpicker colourInput
 #' @importFrom DT renderDT datatable DTOutput
-#' @importFrom data.table data.table
+#' @importFrom data.table data.table :=
 #' @importFrom ggbeeswarm geom_beeswarm
 #' @importFrom purrr map
 #' @importFrom stringr str_remove
+#' @importFrom stats median setNames
+#' @importFrom utils sessionInfo
 #' @noRd
 app_server <- function(input, output, session) {
   # Source the original server logic
@@ -729,7 +731,7 @@ app_server <- function(input, output, session) {
     }
     
     title_text <- if(input$selected_language == "de") "Updateverlauf" else "Update History"
-    button_text <- if(input$selected_language == "de") "Schließen" else "Close"
+    button_text <- if(input$selected_language == "de") "Schlie\u00dfen" else "Close"
     
     showModal(modalDialog(
       title = strong(title_text),

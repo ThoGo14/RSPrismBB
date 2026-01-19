@@ -2,6 +2,8 @@
 #'
 #' These are utility functions used across the application.
 #'
+#' @importFrom stats na.exclude sd
+#' @importFrom utils installed.packages
 #' @name utils_helpers
 NULL
 
