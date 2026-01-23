@@ -32,13 +32,13 @@ get_color_palette <- function() {
 
 #' Initialize Translator for Multilingual Support
 #'
-#' @return Translator list object
+#' @return Translator environment object
 #' @noRd
 initialize_translator <- function() {
     # Load translations from JSON file
     trans_file <- system.file("translations.json", package = "RSPrismBB")
 
-    # Fallback if package not installed yet (during development)
+    # Fallback if package not installed yet 
     if (trans_file == "" || !file.exists(trans_file)) {
         trans_file <- "inst/translations.json"
     }
@@ -49,19 +49,20 @@ initialize_translator <- function() {
 
     translations_json <- jsonlite::fromJSON(trans_file)
 
-    # Create a simple translator object
-    translator <- list(
-        translations = translations_json,
-        current_language = "de",
-        set_translation_language = function(lang) {
-            if (lang %in% names(translations_json)) {
-                translator$current_language <<- lang
-            }
-        },
-        tl = function(key) {
-            translations_json[[translator$current_language]][[key]] %||% key
+    # Create an environment
+    translator <- new.env(parent = emptyenv())
+    translator$translations <- translations_json
+    translator$current_language <- "de"
+    
+    translator$set_translation_language <- function(lang) {
+        if (lang %in% names(translations_json)) {
+            translator$current_language <<- lang
         }
-    )
+    }
+    
+    translator$tl <- function(key) {
+        translations_json[[translator$current_language]][[key]] %||% key
+    }
 
     return(translator)
 }

@@ -28,8 +28,15 @@ get_golem_config <- function(value,
                               use_parent = TRUE,
                               file = "inst/golem-config.yml",
                               default = NULL) {
-  tryCatch(
+  result <- tryCatch(
     config::get(value = value, config = config, file = file, use_parent = use_parent),
-    error = function(e) default
+    error = function(e) return(default)
   )
+  
+  # If config::get returns NULL, use default instead
+  if (is.null(result)) {
+    return(default)
+  }
+  
+  return(result)
 }
