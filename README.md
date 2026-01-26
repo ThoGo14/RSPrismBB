@@ -1,5 +1,5 @@
 
-<!-- README.md is generated from README.Rmd. Please edit that file -->
+<!-- README.md is generated from README.Rmd. Please edit that file  -->
 
 # RSPrismBB
 
@@ -211,5 +211,5 @@ This README has been compiled on:
 
 ``` r
 Sys.time()
-#> [1] "2026-01-26 14:19:06 CET"
+#> [1] "2026-01-26 14:25:32 CET"
 ```
