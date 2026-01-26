@@ -11,6 +11,7 @@ GPL-3](https://img.shields.io/badge/License-GPL%203-blue.svg)](https://www.gnu.o
 Version](https://img.shields.io/badge/R-%E2%89%A5%204.0.0-blue.svg)](https://www.r-project.org/)
 [![Lifecycle:
 experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
+[![R-CMD-check](https://github.com/ThoGo14/RSPrismBB/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/ThoGo14/RSPrismBB/actions/workflows/R-CMD-check.yaml)
 <!-- badges: end -->
 
 ## Overview
@@ -24,8 +25,7 @@ plots from Excel data files.
 
 - **Two plot types**: Box plots with bee swarm overlays and bar plots
   with error bars
-- **Multilingual**: Full support for German and English (easily
-  extensible)
+- **Multilingual**: Full support for German and English
 - **Customizable**: Interactive color pickers, flexible grouping, and
   extensive styling options
 - **Excel import**: Direct upload of `.xlsx` files (up to 100MB)
@@ -94,7 +94,7 @@ Your Excel file should be structured as follows:
     - Configure Y-axis limits
 4.  **Export**
     - Choose format (PNG, PDF, SVG)
-    - Set dimensions (cm) and resolution (DPI)
+    - Set dimensions (height and width in cm) and resolution (DPI)
     - Enter filename
     - Click “Download”
 
@@ -114,7 +114,6 @@ Your Excel file should be structured as follows:
 - Mean ± standard deviation
 - Bee swarm overlay
 - Error bars
-- Customizable bar fill when grouping matches dot color
 
 ### Customization Options
 
@@ -130,7 +129,7 @@ Your Excel file should be structured as follows:
 
 The application interface is available in:
 
-- **German** (Deutsch)
+- **German**
 - **English**
 
 Switch languages using the dropdown in the header. All interface
@@ -154,20 +153,6 @@ See [changelog_de.txt](inst/changelog_de.txt) or
 
 Current version: **1.6.1**
 
-## Adding New Languages
-
-To add a new language (e.g., Spanish):
-
-1.  Define translation variables following the existing pattern for
-    German and English translations in the translation system
-
-2.  Update language selector with new language option
-
-3.  Update `inst/translations.json` with new language entries
-
-**Note**: Changelog is currently only available in German and English.
-If you add a new language, the default fallback is English.
-
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
@@ -190,9 +175,9 @@ the [LICENSE.md](LICENSE.md) file for details.
 If you use this application in your research, please cite:
 
 ``` bibtex
-@software{barplot_boxplot_generator,
+@software{RSPrismBB,
   author = {Thomas Goj},
-  title = {Bar- and Boxplot Generator: A Shiny Application for Standardized Data Visualization},
+  title = {RSPrismBB: A Shiny Based GUI R Package for Easy Barplots and Boxplots},
   year = {2026},
   url = {https://github.com/ThoGo14/RSPrismBB}
 }
@@ -226,5 +211,5 @@ This README has been compiled on:
 
 ``` r
 Sys.time()
-#> [1] "2026-01-19 11:24:35 CET"
+#> [1] "2026-01-26 14:19:06 CET"
 ```

@@ -1,4 +1,4 @@
-<b>Version 1.6.1 - 2025-12-08:</b>
+<b>Version 1.6.1 - 2026-01-14:</b>
 - New: Texts can be diplayed in german or english
 
 <b>Version 1.6.0 - 2025-12-08:</b>
