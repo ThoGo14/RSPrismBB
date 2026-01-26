@@ -12,6 +12,8 @@ Version](https://img.shields.io/badge/R-%E2%89%A5%204.0.0-blue.svg)](https://www
 [![Lifecycle:
 experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
 [![R-CMD-check](https://github.com/ThoGo14/RSPrismBB/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/ThoGo14/RSPrismBB/actions/workflows/R-CMD-check.yaml)
+[![Codecov test
+coverage](https://codecov.io/gh/ThoGo14/RSPrismBB/graph/badge.svg)](https://app.codecov.io/gh/ThoGo14/RSPrismBB)
 <!-- badges: end -->
 
 ## Overview
@@ -211,5 +213,5 @@ This README has been compiled on:
 
 ``` r
 Sys.time()
-#> [1] "2026-01-26 14:25:32 CET"
+#> [1] "2026-01-26 14:26:47 CET"
 ```
