@@ -20,7 +20,26 @@
 #' @importFrom utils sessionInfo
 #' @noRd
 app_server <- function(input, output, session) {
-  # Source the original server logic
+  # ---- Per-user / per-session event log ----
+  .log_user <- {
+    u <- session$request$HTTP_X_AUTHENTIK_USERNAME
+    if (is.null(u) || !nzchar(u) || !grepl("^[a-zA-Z0-9._@-]{1,64}$", u)) "unknown" else u
+  }
+  .log_date <- format(Sys.time(), "%Y-%m-%d")
+  .log_file <- file.path("/var/log/shiny",
+                         paste0(.log_user, "_", .log_date, "_", session$token, ".log"))
+  .session_log <- function(event, ...) {
+    ts <- format(Sys.time(), "%Y-%m-%d %H:%M:%S")
+    cat(paste(c(ts, event, ...), collapse = " | "), "\n",
+        file = .log_file, append = TRUE, sep = "")
+  }
+  .session_log(
+    "SESSION_START",
+    paste0("ip=", if (!is.null(session$request$HTTP_X_REAL_IP)) session$request$HTTP_X_REAL_IP else session$request$REMOTE_ADDR),
+    paste0("ua=", substr(if (!is.null(session$request$HTTP_USER_AGENT)) session$request$HTTP_USER_AGENT else "-", 1, 80))
+  )
+  # ----------------------------------------
+
   # Initialize translator
   translator <- initialize_translator()
   
@@ -38,7 +57,12 @@ app_server <- function(input, output, session) {
     translations_json <- jsonlite::fromJSON(
       system.file("translations.json", package = "RSPrismBB")
     )
-    translations_json[[input$selected_language %||% "de"]][[key]] %||% key
+    selected_lang <- input$selected_language
+    if (is.null(selected_lang) || !selected_lang %in% names(translations_json)) {
+      selected_lang <- "de"
+    }
+    translated_value <- translations_json[[selected_lang]][[key]]
+    if (is.null(translated_value)) key else translated_value
   }
   
   # Render dynamic text outputs for UI elements
@@ -221,6 +245,14 @@ app_server <- function(input, output, session) {
     TempDF <- FunctionColcutNA(TempDF)
     return(TempDF)
   })
+
+  # Store upload path so it can be cleaned up when the session ends
+  observeEvent(input$DataTable, {
+    session$userData$upload_path <- input$DataTable$datapath
+    .session_log("FILE_UPLOAD",
+                 paste0("name=", input$DataTable$name),
+                 paste0("size=", input$DataTable$size, "b"))
+  }, ignoreNULL = TRUE)
 
   observe({
     req(DataTable(), input$colcut)
@@ -639,6 +671,9 @@ app_server <- function(input, output, session) {
       paste0(input$Filename, ".", input$ImageFiletype)
     },
     content = function(file) {
+      .session_log("DOWNLOAD",
+           paste0("format=", input$ImageFiletype),
+           paste0("name=", if (nzchar(input$Filename)) input$Filename else "plot"))
       selected_plot <- if (input$plot_tabs == "Boxplot") {
         BoxplotInput()
       } else if (input$plot_tabs == "Barplot") {
@@ -742,6 +777,9 @@ app_server <- function(input, output, session) {
   })
   
   session$onSessionEnded(function() {
+    .session_log("SESSION_END")
+    path <- session$userData$upload_path
+    if (!is.null(path)) unlink(path, force = TRUE)
     stopApp()
   })
 }

@@ -1,0 +1,12 @@
+.git
+.github
+.Rproj.user
+.vscode
+dev
+tests
+vignettes
+joss
+Testdateien
+*.Rproj
+*.md
+README.Rmd

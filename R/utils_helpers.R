@@ -61,7 +61,8 @@ initialize_translator <- function() {
     }
     
     translator$tl <- function(key) {
-        translations_json[[translator$current_language]][[key]] %||% key
+        translated_value <- translations_json[[translator$current_language]][[key]]
+        if (is.null(translated_value)) key else translated_value
     }
 
     return(translator)
