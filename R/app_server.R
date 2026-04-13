@@ -23,7 +23,8 @@ app_server <- function(input, output, session) {
   # ---- Per-user / per-session event log ----
   .log_user <- {
     u <- session$request$HTTP_X_AUTHENTIK_USERNAME
-    if (is.null(u) || !nzchar(u) || !grepl("^[a-zA-Z0-9._@-]{1,64}$", u)) "unknown" else u
+    if (is.null(u) || !nzchar(u) || !grepl("^[a-zA-Z0-9._@ -]{1,64}$", u)) "unknown" else u
+    u <- gsub(" ", "", u)
   }
   .log_date <- format(Sys.time(), "%Y-%m-%d")
   .log_file <- file.path("/var/log/shiny",
