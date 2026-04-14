@@ -27,7 +27,24 @@ app_server <- function(input, output, session) {
     u <- gsub(" ", "", u)
   }
   .log_date <- format(Sys.time(), "%Y-%m-%d")
-  .log_file <- file.path("/var/log/shiny",
+  
+  # R-CMD-check fails since path does not exist
+  .pick_log_dir <- function() {
+    
+    sys_dir <- "/var/log/shiny"
+    if (dir.exists(sys_dir) && file.access(sys_dir, 2) == 0) return(sys_dir)
+    
+    # try create; if it fails, we'll fall back to tempdir()
+    local_dir <- file.path(getwd(), "log")
+    try(dir.create(local_dir, recursive = TRUE, showWarnings = FALSE), silent = TRUE)
+    if (dir.exists(local_dir) && file.access(local_dir, 2) == 0) return(local_dir)
+    
+    tempdir()
+  }
+  
+  .log_dir <- .pick_log_dir()
+  
+  .log_file <- file.path(.log_dir,
                          paste0(.log_user, "_", .log_date, "_", session$token, ".log"))
   .session_log <- function(event, ...) {
     ts <- format(Sys.time(), "%Y-%m-%d %H:%M:%S")
