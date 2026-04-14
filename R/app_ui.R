@@ -90,8 +90,8 @@ app_ui <- function(request) {
             sliderInput("PointSize", label = "Punktgr\u00f6\u00dfe", min = 1, max = 10, step = 0.5, value = 2),
             fluidRow(
               style = "margin-left: 0px; margin-right: 0px;",
-              column(6, numericInput("yMin", "Y-Achse Min", value = NA, min = 0)),
-              column(6, numericInput("yMax", "Y-Achse Max", value = NA, min = 0))
+              column(6, numericInput("yMin", "Y-Achse Min", value = NA, min = NA)),
+              column(6, numericInput("yMax", "Y-Achse Max", value = NA, min = NA))
             ),
             
             # Download options
