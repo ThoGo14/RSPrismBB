@@ -590,7 +590,7 @@ app_server <- function(input, output, session) {
       ggplot() +
       geom_errorbar(
         aes(
-          ymin = mean - (mean * 0.1),
+          ymin = mean - sd,
           ymax = mean + sd,
           x = .data[[input$groupnameis]]
         ),
