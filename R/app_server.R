@@ -798,6 +798,7 @@ app_server <- function(input, output, session) {
     .session_log("SESSION_END")
     path <- session$userData$upload_path
     if (!is.null(path)) unlink(path, force = TRUE)
-    stopApp()
+    # stopApp() removed - should not stop entire server when one session ends!
+    # This caused 502 errors on page reload (F5) in production
   })
 }

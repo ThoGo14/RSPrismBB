@@ -23,10 +23,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 COPY . /app
 
+# Make startup script executable
+RUN chmod +x /app/start-shiny.sh
+
 RUN R -q -e "install.packages(c('remotes','golem'), repos='https://cloud.r-project.org')"
 RUN R -q -e "remotes::install_deps('/app', dependencies = TRUE, upgrade = 'never')"
 RUN R -q -e "remotes::install_local('/app', upgrade = 'never')"
 
 EXPOSE 3838
 
-CMD ["R", "-q", "-e", "options('golem.app.prod' = TRUE); app <- RSPrismBB::run_app(options = list(launch.browser = FALSE)); shiny::runApp(app, host = '0.0.0.0', port = 3838)"]
+# Use bash wrapper script to keep Shiny running even after session crashes
+CMD ["/app/start-shiny.sh"]
