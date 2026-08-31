@@ -192,8 +192,9 @@ app_server <- function(input, output, session) {
     updateCheckboxInput(session, "InpDat", label = tl("array_data_question"))
     updateCheckboxInput(session, "TitelKursiv", label = tl("title_italic"))
     updateCheckboxInput(session, "LegendenTitel", label = tl("legend_title_hide"))
-    updateCheckboxInput(session, "BoxColor", label = tl("boxplot_color"))
+    updateCheckboxInput(session, "BoxColor", label = tl("boxbar_color"))
     updateCheckboxInput(session, "InvertPoint", label = tl("invert_point_color"))
+    updateCheckboxInput(session, "NoShowPoints", label = tl("hide_points"))
 
     # Update numericInput labels
     updateNumericInput(session, "colcut", label = tl("column_before_numeric"))
@@ -443,34 +444,36 @@ app_server <- function(input, output, session) {
       } +
       {
         if (input$InvertPoint) {
-          ggbeeswarm::geom_beeswarm(
-            data = ordered_data,
-            aes(
-              x = .data[[input$groupnameis]],
-              y = .data[[input$DataY]],
-              colour = as.factor(.data[[input$dotid]])
-            ),
-            shape = 21,
-            fill = "black",
-            cex = 1.2,
-            size = input$PointSize,
-            stroke = input$PointSize / 3
-          )
-        } else {
-          ggbeeswarm::geom_beeswarm(
-            data = ordered_data,
-            aes(
-              x = .data[[input$groupnameis]],
-              y = .data[[input$DataY]],
-              fill = as.factor(.data[[input$dotid]])
-            ),
-            shape = 21,
-            color = "black",
-            cex = 1.2,
-            size = input$PointSize,
-            stroke = input$PointSize / 3
-          )
-        }
+            ggbeeswarm::geom_beeswarm(
+              data = ordered_data,
+              aes(
+                x = .data[[input$groupnameis]],
+                y = .data[[input$DataY]],
+                colour = as.factor(.data[[input$dotid]])
+              ),
+              shape = 21,
+              fill = "black",
+              cex = 1.2,
+              size = input$PointSize,
+              stroke = input$PointSize / 3,
+              alpha = ifelse(input$NoShowPoints, 0, 1)
+            )
+          } else {
+            ggbeeswarm::geom_beeswarm(
+              data = ordered_data,
+              aes(
+                x = .data[[input$groupnameis]],
+                y = .data[[input$DataY]],
+                fill = as.factor(.data[[input$dotid]])
+              ),
+              shape = 21,
+              color = "black",
+              cex = 1.2,
+              size = input$PointSize,
+              stroke = input$PointSize / 3,
+              alpha = ifelse(input$NoShowPoints, 0, 1)
+            )
+          }
       } +
       theme_classic() +
       labs(
@@ -588,6 +591,21 @@ app_server <- function(input, output, session) {
     
     p <- Statistics %>%
       ggplot() +
+      {
+        if (input$BoxColor && input$dotid == input$groupnameis) {
+          geom_bar(aes(
+            x = .data[[input$groupnameis]],
+            y = mean,
+            fill = as.factor(.data[[input$dotid]])),
+            stat = "identity",
+            alpha = 0.3)
+        } else {
+          geom_bar(aes(
+            x = .data[[input$groupnameis]],
+            y = mean),
+            stat = "identity")
+        }
+      } +
       geom_errorbar(
         aes(
           ymin = mean - sd,
@@ -595,14 +613,7 @@ app_server <- function(input, output, session) {
           x = .data[[input$groupnameis]]
         ),
         width = 0.5,
-        colour = "grey"
-      ) +
-      geom_bar(
-        aes(
-          x = .data[[input$groupnameis]],
-          y = mean
-        ),
-        stat = "identity"
+        colour = "gray20"
       ) +
       {
         if (input$InvertPoint) {
@@ -617,7 +628,8 @@ app_server <- function(input, output, session) {
             fill = "black",
             cex = 1.2,
             size = input$PointSize,
-            stroke = input$PointSize / 3
+            stroke = input$PointSize / 3,
+            alpha = ifelse(input$NoShowPoints, 0, 1)
           )
         } else {
           ggbeeswarm::geom_beeswarm(
@@ -631,18 +643,24 @@ app_server <- function(input, output, session) {
             color = "black",
             cex = 1.2,
             size = input$PointSize,
-            stroke = input$PointSize / 3
+            stroke = input$PointSize / 3,
+            alpha = ifelse(input$NoShowPoints, 0, 1)
           )
         }
       } +
-      theme_classic() +
-      labs(
-        title = input$DataY,
-        y = input$LabelY,
-        x = input$LabelX
-      ) +
       {
-        if (input$InvertPoint) {
+        if (input$InvertPoint && input$BoxColor && input$dotid == input$groupnameis) {
+          list(
+            scale_colour_manual(
+              name = input$dotid,
+              values = setNames(SelectionGroup()[["Color"]], SelectionGroup()[["GroupID"]]),
+            ),
+            scale_fill_manual(
+              name = input$dotid,
+              values = setNames(SelectionGroup()[["Color"]], SelectionGroup()[["GroupID"]])
+            )
+          )
+        } else if (input$InvertPoint) {
           scale_colour_manual(
             name = input$dotid,
             values = setNames(SelectionGroup()[["Color"]], SelectionGroup()[["GroupID"]])
@@ -654,6 +672,25 @@ app_server <- function(input, output, session) {
           )
         }
       } +
+      theme_classic() +
+      labs(
+        title = input$DataY,
+        y = input$LabelY,
+        x = input$LabelX
+      ) +
+      # {
+      #   if (input$InvertPoint) {
+      #     scale_colour_manual(
+      #       name = input$dotid,
+      #       values = setNames(SelectionGroup()[["Color"]], SelectionGroup()[["GroupID"]])
+      #     )
+      #   } else {
+      #     scale_fill_manual(
+      #       name = input$dotid,
+      #       values = setNames(SelectionGroup()[["Color"]], SelectionGroup()[["GroupID"]])
+      #     )
+      #   }
+      # } +
       {
         if (is.numeric(y_min) | is.numeric(y_max)) {
           ylim(c(y_min, y_max))

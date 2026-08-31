@@ -1,15 +1,19 @@
+<b>Version 1.7.0 - 2026-08-31:</b>
+- NEU: Punkte können über eine Checkbox ausgeblendet werden
+- NEU: Barplot-Farbe wird nun korrekt eingefärbt, wenn Gruppe und Punktfarbe gleich sind
+
 <b>Version 1.6.1 - 2026-01-14:</b>
-- Neu: Texte können in Deutsch oder Englisch angezeigt werden
+- NEU: Texte können in Deutsch oder Englisch angezeigt werden
 
 <b>Version 1.6.0 - 2025-12-08:</b>
-- Neu: Tatsächliche Bildgröße wird angezeigt. Kann über Download Optionen angepasst werden
-- Neu: Color Picker ist nun interaktiv, nicht mehr als Tabelle
-- Neu: Legenden Titel kann ausgeplendet werden
-- Neu: Boxplot Farben können aktiviert werden, wenn Gruppe und Punktfarbe gleich sind!
-- Neu: Punktfarbe kann invertiert werden (Farbe als Füllung oder als Rand)
+- NEU: Tatsächliche Bildgröße wird angezeigt. Kann über Download Optionen angepasst werden
+- NEU: Color Picker ist nun interaktiv, nicht mehr als Tabelle
+- NEU: Legenden Titel kann ausgeplendet werden
+- NEU: Boxplot Farben können aktiviert werden, wenn Gruppe und Punktfarbe gleich sind!
+- NEU: Punktfarbe kann invertiert werden (Farbe als Füllung oder als Rand)
 
 <b>Version 1.5.2 - 2025-10-27:</b>
-- Neu: Bilder können nun als .svg gespeichert werden, und sommit korrekt in Inkscape eingelesen
+- NEU: Bilder können nun als .svg gespeichert werden, und sommit korrekt in Inkscape eingelesen
 
 <b>Version 1.5.1 - 2025-10-20:</b>
 - Bugfix: Arial Schriftart wird in der PDF nun korrekt dargestellt

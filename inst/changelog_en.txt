@@ -1,15 +1,19 @@
+<b>Version 1.7.0 - 2026-08-31:</b>
+- NEW: Points can be hidden via a checkbox
+- NEW: Bar plot color is now applied correctly when group and point color are the same
+
 <b>Version 1.6.1 - 2026-01-14:</b>
-- New: Texts can be diplayed in german or english
+- NEW: Texts can be diplayed in german or english
 
 <b>Version 1.6.0 - 2025-12-08:</b>
-- New: Actual image size is displayed. Can be adjusted via download options
-- New: Color picker is now interactive, no longer a table
-- New: Legend titles can be hidden
-- New: Box plot colors can be activated when group and point colors are the same!
-- New: Point color can be inverted (color as fill or as border).
+- NEW: Actual image size is displayed. Can be adjusted via download options
+- NEW: Color picker is now interactive, no longer a table
+- NEW: Legend titles can be hidden
+- NEW: Box plot colors can be activated when group and point colors are the same!
+- NEW: Point color can be inverted (color as fill or as border).
 
 <b>Version 1.5.2 - 2025-10-27:</b>
-- New: Images can now be saved as .svg and thus imported correctly into Inkscape.
+- NEW: Images can now be saved as .svg and thus imported correctly into Inkscape.
 
 <b>Version 1.5.1 - 2025-10-20:</b>
 - Bug fix: Arial font is now displayed correctly in the PDF.

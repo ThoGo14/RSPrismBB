@@ -85,8 +85,9 @@ app_ui <- function(request) {
             textInput("LabelX", label = "X-Achsen Beschriftung", value = NULL),
             checkboxInput("TitelKursiv", label = "Titel kursiv?", value = FALSE),
             checkboxInput("LegendenTitel", label = "Legendentitel ausblenden?", value = FALSE),
-            checkboxInput("BoxColor", label = "Boxplot einf\u00e4rben?", value = FALSE),
+            checkboxInput("BoxColor", label = "Box/Bar einf\u00e4rben?", value = FALSE),
             checkboxInput("InvertPoint", label = "Punktfarbe invertieren?", value = FALSE),
+            checkboxInput("NoShowPoints", label = "Punkte ausblenden", value = FALSE),
             sliderInput("PointSize", label = "Punktgr\u00f6\u00dfe", min = 1, max = 10, step = 0.5, value = 2),
             fluidRow(
               style = "margin-left: 0px; margin-right: 0px;",
